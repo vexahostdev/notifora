@@ -1,0 +1,28 @@
+{
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "build": "vite build",
+        "dev": "vite",
+        "all": "concurrently -n laravel,vite \"php artisan serve --port=8040\" \"npm run dev\"",
+        "all:full": "concurrently -n laravel,vite,queue,socket \"php artisan serve --port=8040\" \"npm run dev\" \"php artisan queue:work --queue=notifora_high,notifora_default,notifora_channels,notifora_webhooks\" \"npm --prefix socket-engine start\""
+    },
+    "devDependencies": {
+        "@tailwindcss/vite": "^4.0.0",
+        "axios": "^1.7.4",
+        "concurrently": "^9.0.1",
+        "laravel-vite-plugin": "^1.2.0",
+        "tailwindcss": "^4.0.0",
+        "vite": "^6.0.11"
+    },
+    "dependencies": {
+        "@alpinejs/collapse": "^3.17.5",
+        "@alpinejs/focus": "^3.17.5",
+        "@fontsource-variable/inter": "^5.3.0",
+        "@fontsource/archivo-black": "^5.3.0",
+        "@fontsource/jetbrains-mono": "^5.3.0",
+        "alpinejs": "^3.17.5",
+        "chart.js": "^4.6.1",
+        "socket.io-client": "^4.8.4"
+    }
+}

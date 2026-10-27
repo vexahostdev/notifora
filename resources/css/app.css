@@ -1,0 +1,112 @@
+@import "tailwindcss";
+@import "@fontsource-variable/inter";
+@import "@fontsource/jetbrains-mono/500.css";
+@import "@fontsource/jetbrains-mono/700.css";
+
+@source "../views";
+@source "../js";
+
+/* Default = dark. Mode terang menimpa variabel di bawah lewat <html data-theme="light">.
+   Skala zinc & "white" dibalik sehingga class yang sama (text-zinc-300, text-white, hover:bg-white/5, ...)
+   otomatis benar di kedua tema. Teks putih di atas warna solid memakai text-[#fff] (tidak ikut berbalik). */
+@theme {
+  --color-cobalt: #0033ff;
+  --color-cobalt-hover: #0026cc;
+  --color-ink: #0d0d0d;
+  --color-surface: #09090b;
+  --color-surface-2: #121216;
+  --color-line: #27272a;
+  --color-ok: #10b981;
+  --color-warn: #f59e0b;
+  --color-err: #ef4444;
+  --color-info: #3b82f6;
+  --color-link: #7b97ff;
+  --font-sans: "Inter Variable", Inter, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+}
+
+:root { color-scheme: dark; }
+
+:root[data-theme="light"] {
+  color-scheme: light;
+  --color-surface: #f4f5f8;
+  --color-surface-2: #ffffff;
+  --color-line: #e2e4ea;
+  --color-white: #09090b;
+  --color-ok: #059669;
+  --color-warn: #d97706;
+  --color-err: #dc2626;
+  --color-info: #2563eb;
+  --color-cobalt: #1f46e6;
+  --color-cobalt-hover: #1737b8;
+  --color-link: #1f46e6;
+
+  --color-zinc-100: #18181b;
+  --color-zinc-200: #27272a;
+  --color-zinc-300: #3f3f46;
+  --color-zinc-400: #52525b;
+  --color-zinc-500: #71717a;
+  --color-zinc-600: #a1a1aa;
+  --color-zinc-700: #d4d4d8;
+  --color-zinc-800: #e8e9ee;
+  --color-zinc-900: #f1f2f6;
+
+  --color-emerald-200: #065f46;
+  --color-emerald-300: #047857;
+  --color-emerald-400: #059669;
+  --color-red-200: #991b1b;
+  --color-red-300: #b91c1c;
+  --color-blue-300: #1d4ed8;
+  --color-blue-400: #2563eb;
+  --color-amber-200: #92400e;
+  --color-amber-300: #b45309;
+  --color-amber-400: #b45309;
+  --color-sky-300: #0369a1;
+  --color-sky-400: #0284c7;
+  --color-purple-300: #7e22ce;
+  --color-pink-300: #be185d;
+}
+
+@layer base {
+  body { @apply bg-surface text-zinc-200 font-sans antialiased; }
+  [x-cloak] { display: none !important; }
+  :focus-visible { @apply outline-2 outline-offset-2 outline-cobalt; }
+}
+
+@layer components {
+  .card { @apply bg-surface-2 border border-line rounded-lg; }
+  :root[data-theme="light"] .card { box-shadow: 0 1px 2px rgb(16 24 40 / 0.04); }
+  .card-pad { @apply p-5; }
+  .label { @apply block text-xs font-medium text-zinc-400 mb-1.5; }
+  .input { @apply w-full bg-surface border border-line rounded-md px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-cobalt focus:outline-none; }
+  .input-mono { @apply font-mono text-xs; }
+  .hint { @apply text-xs text-zinc-500 mt-1; }
+  .error-text { @apply text-xs text-err mt-1; }
+  .btn, .btn-primary, .btn-secondary, .btn-ghost, .btn-danger { @apply inline-flex items-center justify-center gap-2 rounded-md px-3.5 py-2 text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer; }
+  .btn-primary { @apply bg-cobalt text-[#fff] hover:bg-cobalt-hover; }
+  .btn-secondary { @apply bg-zinc-800 text-zinc-100 hover:bg-zinc-700 border border-line; }
+  .btn-ghost { @apply text-zinc-300 hover:bg-white/5; }
+  .btn-danger { @apply bg-err/10 text-err border border-err/30 hover:bg-err/20; }
+  .btn-sm { @apply px-2.5 py-1 text-xs; }
+  .th { @apply px-4 py-2.5 text-left text-[11px] uppercase tracking-wider font-semibold text-zinc-500 whitespace-nowrap; }
+  .td { @apply px-4 py-3 text-sm; }
+  .tr { @apply border-t border-line hover:bg-white/[0.02]; }
+  .nav-link { @apply flex items-center gap-2.5 px-3 py-2 rounded-md text-sm text-zinc-400 hover:text-white hover:bg-white/5; }
+  .nav-link-active { @apply bg-cobalt/15 text-white; }
+  .code { @apply font-mono text-xs bg-surface border border-line rounded-md p-3 overflow-x-auto text-zinc-300; }
+
+  /* Isi dokumentasi (/docs) */
+  .doc-body { @apply text-[15px] leading-7 text-zinc-300; }
+  .doc-body p { @apply my-3; }
+  .doc-body h3 { @apply mt-7 mb-2 text-base font-semibold text-white; }
+  .doc-body ul { @apply my-3 list-disc pl-6 space-y-1.5; }
+  .doc-body ol { @apply my-3 list-decimal pl-6 space-y-1.5; }
+  .doc-body li::marker { @apply text-zinc-600; }
+  .doc-body a { @apply text-link underline-offset-2 hover:underline; }
+  .doc-body strong { @apply text-white font-semibold; }
+  .doc-body :not(pre) > code { @apply font-mono text-[12.5px] bg-surface border border-line rounded px-1.5 py-0.5 text-zinc-200; }
+  .doc-body table { @apply block w-full overflow-x-auto my-4 text-sm border-collapse; }
+  .doc-body th { @apply text-left text-[11px] uppercase tracking-wider font-semibold text-zinc-500 px-3 py-2 border-b border-line whitespace-nowrap; }
+  .doc-body td { @apply px-3 py-2 border-b border-line align-top; }
+  .doc-body kbd { @apply font-mono text-[11px] border border-line rounded px-1.5 py-0.5; }
+}

@@ -1,0 +1,93 @@
+@import "tailwindcss";
+@import "@fontsource/archivo-black";
+@import "@fontsource-variable/inter";
+@import "@fontsource/jetbrains-mono/500.css";
+@import "@fontsource/jetbrains-mono/700.css";
+
+@source "../views";
+
+/* Default = terang (beton). <html data-theme="dark"> membalik ink/concrete/white dan skala zinc,
+   sehingga class yang sama (text-ink, bg-white, bg-ink text-white, ...) otomatis benar. */
+@theme {
+  --color-cobalt: #0033ff;
+  --color-cobalt-hover: #0026cc;
+  --color-ink: #0d0d0d;
+  --color-concrete: #e3e7ee;
+  --color-concrete-2: #dce1e9;
+  --color-paper: #f4f6f9;
+  --font-display: "Archivo Black", Inter, sans-serif;
+  --font-sans: "Inter Variable", Inter, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+  --shadow-brutal: 8px 8px 0 #0033ff;
+  --shadow-brutal-ink: 4px 4px 0 var(--color-ink);
+}
+
+:root {
+  color-scheme: light;
+  --hero-a: #dce1e9; --hero-b: rgba(255,255,255,.45); --hero-c: rgba(185,195,210,.5);
+  --hero-d: rgba(215,222,232,.8); --hero-e: rgba(198,206,218,.4);
+  --light-a: #d5dce6; --light-b: #e8edf4; --light-c: #f8fafc; --light-d: #ffffff;
+  --logo-filter: none;
+  --hero-text: #ffffff; --hero-glow: rgba(160,170,185,.25);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --color-ink: #f2f4f8;
+  --color-concrete: #0f1115;
+  --color-concrete-2: #171a21;
+  --color-paper: #14171d;
+  --color-white: #1a1d25;
+  --color-cobalt: #3b6bff;
+  --color-cobalt-hover: #5a82ff;
+  --shadow-brutal: 8px 8px 0 #1c3fd1;
+
+  --color-zinc-500: #94a3b8;
+  --color-zinc-600: #a8b0bd;
+  --color-zinc-700: #cbd2dc;
+
+  --hero-a: #14171d; --hero-b: rgba(255,255,255,.04); --hero-c: rgba(40,52,80,.45);
+  --hero-d: rgba(24,28,36,.9); --hero-e: rgba(15,17,21,.6);
+  --light-a: #12151b; --light-b: #161a22; --light-c: #1a1e27; --light-d: #1d222c;
+  --logo-filter: brightness(1.7) saturate(.9);
+  --hero-text: #2a3142; --hero-glow: rgba(90,130,255,.18);
+}
+
+@layer base {
+  html { scroll-behavior: smooth; }
+  body { @apply bg-concrete text-ink font-sans antialiased overflow-x-hidden; }
+  ::selection { @apply bg-cobalt text-[#fff]; }
+  [x-cloak] { display: none !important; }
+  :focus-visible { @apply outline-2 outline-offset-2 outline-cobalt; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+  }
+}
+
+@layer components {
+  .concrete-hero {
+    background-color: var(--hero-a);
+    background-image:
+      radial-gradient(at 18% 25%, var(--hero-b) 0, transparent 55%),
+      radial-gradient(at 82% 70%, var(--hero-c) 0, transparent 50%),
+      radial-gradient(at 50% 50%, var(--hero-d) 0, var(--hero-e) 100%);
+  }
+  .concrete-light {
+    background-color: var(--light-c);
+    background-image: linear-gradient(125deg, var(--light-a) 0%, var(--light-b) 28%, var(--light-c) 62%, var(--light-d) 100%);
+  }
+  .hero-ghost { color: var(--hero-text); text-shadow: 0 2px 18px var(--hero-glow); }
+  .brand-logo { filter: var(--logo-filter); }
+  .display { @apply font-display uppercase tracking-tight leading-[0.9]; }
+  .b-input { @apply w-full bg-white border-[2.5px] border-ink text-ink font-mono text-xs p-2.5 outline-none transition focus:border-cobalt focus:shadow-[4px_4px_0_#0033ff] focus:-translate-x-0.5 focus:-translate-y-0.5; }
+  .b-label { @apply block font-mono text-[10px] font-black uppercase tracking-wider mb-1.5; }
+  .b-btn { @apply inline-flex items-center justify-center gap-2 bg-ink text-white font-display uppercase tracking-widest text-sm px-6 py-3.5 border-2 border-ink shadow-[5px_5px_0_#0033ff] transition hover:bg-cobalt hover:text-[#fff] hover:border-cobalt active:translate-x-0.5 active:translate-y-0.5 cursor-pointer; }
+  .b-btn-alt { @apply inline-flex items-center justify-center gap-2 bg-white text-ink font-mono font-bold uppercase tracking-widest text-xs px-5 py-3 border-2 border-ink shadow-[3px_3px_0_var(--color-ink)] transition hover:bg-concrete active:translate-x-0.5 active:translate-y-0.5 cursor-pointer; }
+}
+
+@keyframes rise { from { transform: translateY(105%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes draw { to { stroke-dashoffset: 0; } }
+.rise { animation: rise .8s cubic-bezier(.16,1,.3,1) both; }
+.reveal { opacity: 0; transform: translateY(24px); transition: opacity .7s ease, transform .7s ease; }
+.reveal.is-in { opacity: 1; transform: none; }
+.draw { stroke-dasharray: 2400; stroke-dashoffset: 2400; animation: draw 1.6s ease-out .3s forwards; }

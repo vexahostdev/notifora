@@ -1,0 +1,98 @@
+# Stack Notifora. Semua secret dibaca dari file .env (lihat .env.example) — jangan commit .env.
+name: notifora
+
+x-app: &app
+  build: { context: ., target: app }
+  env_file: ${ENV_FILE:-.env}
+  environment:
+    DB_HOST: notifora-mysql
+    REDIS_HOST: notifora-redis
+    REDIS_CLIENT: predis
+    QUEUE_CONNECTION: redis
+    CACHE_STORE: redis
+  depends_on:
+    notifora-mysql: { condition: service_healthy }
+    notifora-redis: { condition: service_healthy }
+  restart: unless-stopped
+
+services:
+  notifora-app:
+    <<: *app
+    build: { context: ., target: app, args: { ROLE: web } }
+    environment:
+      ROLE: web
+      RUN_MIGRATIONS: ${RUN_MIGRATIONS:-false}
+      DB_HOST: notifora-mysql
+      REDIS_HOST: notifora-redis
+      REDIS_CLIENT: predis
+      QUEUE_CONNECTION: redis
+      CACHE_STORE: redis
+    ports: ["8040:8040"]
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:8040/up >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+
+  notifora-worker:
+    <<: *app
+    environment:
+      ROLE: worker
+      DB_HOST: notifora-mysql
+      REDIS_HOST: notifora-redis
+      REDIS_CLIENT: predis
+      QUEUE_CONNECTION: redis
+      CACHE_STORE: redis
+
+  notifora-scheduler:
+    <<: *app
+    environment:
+      ROLE: scheduler
+      DB_HOST: notifora-mysql
+      REDIS_HOST: notifora-redis
+      REDIS_CLIENT: predis
+      QUEUE_CONNECTION: redis
+      CACHE_STORE: redis
+
+  notifora-socket:
+    build: ./socket-engine
+    environment:
+      PORT: 8042
+      REDIS_URL: redis://:${REDIS_PASSWORD}@notifora-redis:6379/0
+      SOCKET_JWT_SECRET: ${SOCKET_JWT_SECRET}
+      SOCKET_ALLOWED_ORIGINS: ${SOCKET_ALLOWED_ORIGINS}
+      LARAVEL_INTERNAL_URL: http://notifora-app:8040
+      INTERNAL_API_SECRET: ${INTERNAL_API_SECRET}
+    ports: ["8042:8042"]
+    depends_on: [notifora-redis, notifora-app]
+    restart: unless-stopped
+
+  notifora-mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_DATABASE: ${DB_DATABASE:-notifora_db}
+      MYSQL_USER: ${DB_USERNAME:-notifora_user}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD}
+    command: ["--character-set-server=utf8mb4", "--collation-server=utf8mb4_unicode_ci", "--sql-mode=STRICT_ALL_TABLES"]
+    volumes: ["mysql-data:/var/lib/mysql"]
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "-p${DB_ROOT_PASSWORD}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    restart: unless-stopped
+
+  notifora-redis:
+    image: redis:7.2-alpine
+    command: ["redis-server", "--appendonly", "yes", "--requirepass", "${REDIS_PASSWORD}"]
+    volumes: ["redis-data:/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli -a ${REDIS_PASSWORD} ping | grep PONG"]
+      interval: 10s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  mysql-data:
+  redis-data:

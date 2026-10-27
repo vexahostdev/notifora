@@ -1,0 +1,33 @@
+/.phpunit.cache
+/node_modules
+/public/build
+/public/hot
+/public/storage
+/storage/*.key
+/storage/pail
+/vendor
+.phpactor.json
+.phpunit.result.cache
+Homestead.json
+Homestead.yaml
+npm-debug.log
+yarn-error.log
+/auth.json
+/.fleet
+/.idea
+/.nova
+/.vscode
+/.zed
+
+# --- Environment: simpan hanya template (*.example) ---
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# --- Lokal ---
+/.claude
+/socket-engine/node_modules
+/database/*.sqlite
+/database/*.sqlite-journal
+*.log

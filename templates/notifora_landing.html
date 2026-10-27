@@ -1,0 +1,1421 @@
+<!DOCTYPE html>
+<html lang="ja" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>NOTIFORA — TRIGGER HARD / ENDLESS NO LIMIT NOTIFICATIONS</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Archivo Black & Syne for massive grotesque display, Noto Sans JP for Japanese, Permanent Marker for street tags -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Inter:wght@500;700;800;900&family=Noto+Sans+JP:wght@400;500;700;900&display=swap" rel="stylesheet">
+
+  <!-- Import Map for React 18 & Framer Motion -->
+  <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@18.3.1",
+        "react-dom/client": "https://esm.sh/react-dom@18.3.1/client",
+        "framer-motion": "https://esm.sh/framer-motion@11.11.17?deps=react@18.3.1,react-dom@18.3.1"
+      }
+    }
+  </script>
+
+  <!-- Babel Standalone for JSX compilation -->
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+  <style>
+    :root {
+      --spray-blue: #0033FF;
+      --spray-blue-bright: #0047FF;
+      --spray-cyan: #0077FF;
+      --ink-black: #0D0D0D;
+      --concrete-base: #DEE3EA;
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #E3E7EE;
+      color: #0D0D0D;
+      font-family: 'Inter', 'Noto Sans JP', sans-serif;
+      overflow-x: hidden;
+    }
+
+    /* Ultra-heavy condensed/grotesque display typography matching reference */
+    .font-display {
+      font-family: 'Archivo Black', 'Inter', sans-serif;
+      letter-spacing: -0.03em;
+      line-height: 0.91;
+    }
+
+    .font-jp {
+      font-family: 'Noto Sans JP', sans-serif;
+    }
+
+    /* Concrete & Plaster Procedural Background Textures */
+    .concrete-hero {
+      background-color: #DCE1E9;
+      background-image:
+        radial-gradient(at 18% 25%, rgba(255, 255, 255, 0.45) 0px, transparent 55%),
+        radial-gradient(at 82% 70%, rgba(185, 195, 210, 0.5) 0px, transparent 50%),
+        radial-gradient(at 50% 50%, rgba(215, 222, 232, 0.8) 0px, rgba(198, 206, 218, 0.4) 100%);
+    }
+
+    .concrete-section-2 {
+      background-color: #F4F6F9;
+      background-image:
+        linear-gradient(125deg, #D5DCE6 0%, #E8EDF4 28%, #F8FAFC 62%, #FFFFFF 100%);
+    }
+
+    .concrete-section-3 {
+      background-color: #FFFFFF;
+      background-image:
+        radial-gradient(at 15% 5%, #D5DCE6 0%, transparent 45%),
+        radial-gradient(at 88% 8%, #CBD4E1 0%, transparent 48%),
+        linear-gradient(180deg, #E2E7F0 0%, #F7F9FC 24%, #FFFFFF 55%);
+    }
+
+    /* Subtle distressed grunge overlay on white hero text */
+    .hero-white-text {
+      color: #FFFFFF;
+      text-shadow: 0 2px 18px rgba(160, 170, 185, 0.22);
+      mix-blend-mode: normal;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #DCE1E9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #0033FF;
+    }
+
+    /* Interactive Spray Canvas Cursor */
+    .spray-cursor-active {
+      cursor: crosshair;
+    }
+  </style>
+</head>
+<body>
+  <!-- Global SVG Filters for Realistic Aerosol Spray Paint, Stipple Mist, and Concrete Grain -->
+  <svg style="position: absolute; width: 0; height: 0; pointer-events: none;" aria-hidden="true">
+    <defs>
+      <!-- 1. Aerosol Spray Edge Filter (Used on Infinity Loop & Graffiti Strokes) -->
+      <filter id="aerosol-spray" x="-20%" y="-20%" width="140%" height="140%" filterUnits="objectBoundingBox">
+        <!-- High-frequency noise for fine paint droplets -->
+        <feTurbulence type="fractalNoise" baseFrequency="0.65" numOctaves="4" seed="14" result="fineNoise" />
+        <!-- Medium-frequency noise for irregular spray edge -->
+        <feTurbulence type="turbulence" baseFrequency="0.045" numOctaves="3" seed="5" result="coarseNoise" />
+        <!-- Combine displace for gritty aerosol edge -->
+        <feDisplacementMap in="SourceGraphic" in2="coarseNoise" scale="11" xChannelSelector="R" yChannelSelector="G" result="coarseDisplaced" />
+        <feDisplacementMap in="coarseDisplaced" in2="fineNoise" scale="16" xChannelSelector="R" yChannelSelector="B" result="fineDisplaced" />
+        <!-- Soft outer mist halo -->
+        <feGaussianBlur in="SourceGraphic" stdDeviation="7" result="mistBlur" />
+        <feDisplacementMap in="mistBlur" in2="fineNoise" scale="26" xChannelSelector="G" yChannelSelector="R" result="mistDisplaced" />
+        <feMerge>
+          <feMergeNode in="mistDisplaced" />
+          <feMergeNode in="fineDisplaced" />
+        </feMerge>
+      </filter>
+
+      <!-- 2. Sharp Handstyle Graffiti Filter (Used on "Go HARD" & Graffiti Signature Tag) -->
+      <filter id="graffiti-handstyle" x="-25%" y="-25%" width="150%" height="150%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="4" seed="8" result="grain" />
+        <feTurbulence type="turbulence" baseFrequency="0.06" numOctaves="2" seed="3" result="wobble" />
+        <feDisplacementMap in="SourceGraphic" in2="wobble" scale="6" xChannelSelector="R" yChannelSelector="G" result="roughStroke" />
+        <feDisplacementMap in="roughStroke" in2="grain" scale="11" xChannelSelector="R" yChannelSelector="B" result="sprayedStroke" />
+        <feGaussianBlur in="SourceGraphic" stdDeviation="4.5" result="glow" />
+        <feDisplacementMap in="glow" in2="grain" scale="20" result="overspray" />
+        <feMerge>
+          <feMergeNode in="overspray" />
+          <feMergeNode in="sprayedStroke" />
+        </feMerge>
+      </filter>
+
+      <!-- 3. Heavy Black Spray Shadow Filter -->
+      <filter id="black-spray-shade" x="-30%" y="-30%" width="160%" height="160%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="4" seed="21" result="stipple" />
+        <feGaussianBlur in="SourceGraphic" stdDeviation="3.5" result="softCore" />
+        <feDisplacementMap in="softCore" in2="stipple" scale="18" xChannelSelector="R" yChannelSelector="G" />
+      </filter>
+
+      <!-- 4. Concrete Wall Grunge & Plaster Texture Filter -->
+      <filter id="concrete-grain" x="0%" y="0%" width="100%" height="100%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.55" numOctaves="4" stitchTiles="stitch" result="noise" />
+        <feColorMatrix type="saturate" values="0" in="noise" result="monoNoise" />
+        <feComponentTransfer in="monoNoise" result="contrastNoise">
+          <feFuncA type="linear" slope="0.09" />
+        </feComponentTransfer>
+      </filter>
+    </defs>
+  </svg>
+
+  <div id="root"></div>
+
+  <script type="text/babel" data-type="module">
+    import React, { useState, useEffect, useRef } from 'react';
+    import { createRoot } from 'react-dom/client';
+    import {
+      motion,
+      useScroll,
+      useTransform,
+      useSpring,
+      useMotionValue,
+      AnimatePresence
+    } from 'framer-motion';
+
+    /* ============================================================================
+       REUSABLE HEADER BAR (Matches the top of every frame in reference image)
+       ============================================================================ */
+    const HeaderBar = ({ onNavClick, activeSection, isSticky = false }) => {
+      const navItems = ['OVERVIEW', 'CHANNELS', 'WORKFLOW', 'DOCS', 'PRICING'];
+
+      return (
+        <header
+          className={`${
+            isSticky
+              ? 'fixed top-0 left-0 right-0 z-50 bg-[#E3E7EE]/80 backdrop-blur-md border-b border-black/5 py-3.5'
+              : 'relative w-full z-30 pt-6 pb-2'
+          } px-5 sm:px-9 md:px-12 flex items-center justify-between transition-all duration-300`}
+        >
+          {/* Left: NOTIFORA Overlapping Double-Square Logo */}
+          <a
+            href="#hero"
+            onClick={(e) => {
+              e.preventDefault();
+              onNavClick('OVERVIEW');
+            }}
+            className="group flex items-center gap-2 focus:outline-none"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              className="transition-transform duration-300 group-hover:rotate-90"
+            >
+              {/* Top-left square */}
+              <rect
+                x="2.5"
+                y="2.5"
+                width="12"
+                height="12"
+                stroke="#0D0D0D"
+                strokeWidth="2.3"
+                fill="none"
+              />
+              {/* Bottom-right interlocking square */}
+              <rect
+                x="9.5"
+                y="9.5"
+                width="12"
+                height="12"
+                stroke="#0D0D0D"
+                strokeWidth="2.3"
+                fill="none"
+              />
+            </svg>
+            <span className="font-extrabold text-[13px] sm:text-[14px] tracking-[0.08em] text-[#0D0D0D]">
+              NOTIFORA
+            </span>
+          </a>
+
+          {/* Center: Navigation Links */}
+          <nav className="hidden md:flex items-center gap-7 lg:gap-9">
+            {navItems.map((item) => {
+              const isActive = activeSection === item;
+              return (
+                <button
+                  key={item}
+                  onClick={() => onNavClick(item)}
+                  className="relative group py-1 text-[10.5px] font-extrabold tracking-[0.14em] text-[#0D0D0D] transition-colors hover:text-[#0033FF]"
+                >
+                  {item}
+                  <span
+                    className={`absolute bottom-0 left-0 h-[2px] bg-[#0033FF] transition-all duration-300 ${
+                      isActive ? 'w-full' : 'w-0 group-hover:w-full'
+                    }`}
+                  />
+                </button>
+              );
+            })}
+          </nav>
+
+          {/* Right: GET API KEY ↗ */}
+          <a
+            href="notifora_auth.html"
+            className="group flex items-center gap-1 text-[10.5px] sm:text-[11px] font-extrabold tracking-[0.12em] text-[#0D0D0D] hover:text-[#0033FF] transition-colors"
+          >
+            <span>GET API KEY</span>
+            <motion.span
+              className="inline-block text-[12px] leading-none"
+              whileHover={{ x: 2, y: -2 }}
+            >
+              ↗
+            </motion.span>
+          </a>
+        </header>
+      );
+    };
+
+    /* ============================================================================
+       SECTION 1: HERO ("DROPPED QUEUES... / Go HARD")
+       ============================================================================ */
+    const HeroSection = ({ mouseX, mouseY, onNavClick }) => {
+      // Parallax transforms for multi-depth street art feel
+      const bgTextX = useTransform(mouseX, [-0.5, 0.5], [-10, 10]);
+      const bgTextY = useTransform(mouseY, [-0.5, 0.5], [-8, 8]);
+      const graffitiX = useTransform(mouseX, [-0.5, 0.5], [18, -18]);
+      const graffitiY = useTransform(mouseY, [-0.5, 0.5], [14, -14]);
+
+      const backgroundLines = [
+        'DROPPED QUEUES',
+        'RATE LIMITED',
+        'FAILED RETRIES',
+        'SLACK SPAM',
+        'SILENT FAILS',
+        'SPAGHETTI SDKS',
+      ];
+
+      return (
+        <section
+          id="hero"
+          className="relative w-full min-h-screen concrete-hero overflow-hidden flex flex-col justify-between select-none border-b border-black/10"
+        >
+          {/* SVG Concrete Noise + Realistic Wall Cracks (Left Edge & Top Right) + White Grunge Splatter */}
+          <svg
+            className="absolute inset-0 w-full h-full pointer-events-none z-0"
+            viewBox="0 0 1440 900"
+            preserveAspectRatio="xMidYMid slice"
+          >
+            {/* Procedural grain overlay */}
+            <rect width="1440" height="900" filter="url(#concrete-grain)" />
+
+            {/* White plaster distressed roller marks */}
+            <g opacity="0.45" filter="url(#aerosol-spray)">
+              <path
+                d="M180,60 C420,40 780,90 1120,70 C950,240 420,310 140,280 Z"
+                fill="#FFFFFF"
+              />
+              <path
+                d="M90,520 C390,490 890,510 1280,620 C1040,790 450,820 110,770 Z"
+                fill="#F8FAFC"
+              />
+            </g>
+
+            {/* Authentic Wall Crack on Left Side (Matching reference image) */}
+            <g stroke="#1E2024" fill="none" strokeLinecap="round" strokeLinejoin="round">
+              {/* Main deep crack entering from left edge */}
+              <path
+                d="M-10,188 L18,210 L42,238 L49,255 L78,278 L72,306 L44,344 L36,368 L8,395 L-5,412"
+                strokeWidth="2.6"
+                opacity="0.78"
+              />
+              {/* Secondary micro-fissures */}
+              <path
+                d="M42,238 L66,232 L89,242 M78,278 L104,289 L124,285 M44,344 L62,362 L75,388 M36,368 L19,355"
+                strokeWidth="1.1"
+                opacity="0.48"
+              />
+              {/* Shadow edge along crack */}
+              <path
+                d="M-10,190 L20,213 L44,240 L80,280 L74,308 L46,346"
+                stroke="#000000"
+                strokeWidth="4.5"
+                opacity="0.16"
+              />
+              {/* Subtle top-right plaster crack */}
+              <path
+                d="M1190,0 L1198,28 L1215,48 L1210,76 L1232,96"
+                strokeWidth="0.9"
+                opacity="0.25"
+              />
+              {/* Bottom-left subtle hairline crack */}
+              <path
+                d="M0,760 L35,775 L58,805 L45,840 L65,885"
+                strokeWidth="1.1"
+                opacity="0.3"
+              />
+            </g>
+          </svg>
+
+          {/* Top Navigation Bar */}
+          <HeaderBar onNavClick={onNavClick} activeSection="OVERVIEW" />
+
+          {/* Main Hero Composition Container */}
+          <div className="relative flex-1 flex items-center justify-center px-5 sm:px-9 md:px-12 py-8 md:py-12 z-10">
+            <div className="relative w-full max-w-[1360px] mx-auto">
+              {/* LAYER 1: Massive White Stacked Background Typography */}
+              <motion.div
+                style={{ x: bgTextX, y: bgTextY }}
+                className="relative z-10 flex flex-col items-start justify-center"
+              >
+                {backgroundLines.map((line, index) => (
+                  <div key={line} className="overflow-hidden w-full">
+                    <motion.h2
+                      initial={{ y: '105%', opacity: 0 }}
+                      animate={{ y: '0%', opacity: 1 }}
+                      transition={{
+                        duration: 0.75,
+                        delay: index * 0.08,
+                        ease: [0.16, 1, 0.3, 1],
+                      }}
+                      className="font-display hero-white-text uppercase tracking-[-0.035em] text-[10.8vw] sm:text-[9.6vw] lg:text-[124px] xl:text-[138px] leading-[0.89] select-none"
+                    >
+                      {line}
+                    </motion.h2>
+                  </div>
+                ))}
+              </motion.div>
+
+              {/* LAYER 2: Foreground Street-Art Graffiti "Go HARD" (Electric Blue + Jet Black Spray + Drips) */}
+              <motion.div
+                style={{ x: graffitiX, y: graffitiY }}
+                initial={{ scale: 1.14, opacity: 0, rotate: -2 }}
+                animate={{ scale: 1, opacity: 1, rotate: 0 }}
+                transition={{
+                  duration: 0.95,
+                  delay: 0.42,
+                  type: 'spring',
+                  damping: 16,
+                  stiffness: 110,
+                }}
+                className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none"
+              >
+                <svg
+                  viewBox="0 0 1300 760"
+                  className="w-[106%] sm:w-[102%] max-w-[1360px] h-auto overflow-visible drop-shadow-[0_12px_28px_rgba(0,30,160,0.18)]"
+                >
+                  {/* ================= SPLATTER DOTS & OVERSPRAY MIST ================= */}
+                  <g fill="#0033FF" opacity="0.85">
+                    <circle cx="430" cy="245" r="4.5" />
+                    <circle cx="445" cy="260" r="2.5" />
+                    <circle cx="462" cy="238" r="3.2" />
+                    <circle cx="490" cy="185" r="3" />
+                    <circle cx="385" cy="310" r="5" />
+                    <circle cx="370" cy="328" r="2.2" />
+                    <circle cx="290" cy="485" r="4.5" />
+                    <circle cx="312" cy="502" r="2.8" />
+                    <circle cx="675" cy="248" r="4" />
+                    <circle cx="715" cy="215" r="3.5" />
+                    <circle cx="885" cy="175" r="5.5" />
+                    <circle cx="945" cy="395" r="4.2" />
+                    <circle cx="965" cy="415" r="2.5" />
+                    <circle cx="620" cy="510" r="3.2" />
+                  </g>
+                  <g fill="#0A0A0A" opacity="0.85">
+                    <circle cx="438" cy="252" r="3.5" />
+                    <circle cx="454" cy="272" r="4.8" />
+                    <circle cx="470" cy="258" r="2.2" />
+                    <circle cx="520" cy="235" r="3.5" />
+                    <circle cx="835" cy="195" r="6" />
+                    <circle cx="855" cy="208" r="3" />
+                    <circle cx="785" cy="360" r="4" />
+                    <circle cx="635" cy="470" r="3.8" />
+                  </g>
+
+                  {/* ================= "Go" (UPPER LEFT-CENTER GRAFFITI) ================= */}
+                  <g filter="url(#graffiti-handstyle)">
+                    {/* Letter 'G' — Outer sweeping wildstyle C-loop & crossbar */}
+                    <motion.path
+                      d="M 432 108 C 305 68, 125 182, 92 318 C 68 418, 138 475, 232 428 C 318 385, 392 292, 412 248 L 208 292"
+                      fill="none"
+                      stroke="#0038FF"
+                      strokeWidth="42"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      initial={{ pathLength: 0 }}
+                      animate={{ pathLength: 1 }}
+                      transition={{ duration: 0.9, delay: 0.45, ease: 'easeOut' }}
+                    />
+                    {/* Letter 'G' — Inner upper hook */}
+                    <motion.path
+                      d="M 385 112 C 330 135, 260 205, 298 228 C 338 250, 425 190, 442 142"
+                      fill="none"
+                      stroke="#0038FF"
+                      strokeWidth="32"
+                      strokeLinecap="round"
+                      initial={{ pathLength: 0 }}
+                      animate={{ pathLength: 1 }}
+                      transition={{ duration: 0.65, delay: 0.6 }}
+                    />
+
+                    {/* Letter 'o' — Tilted street oval */}
+                    <motion.path
+                      d="M 555 152 C 475 162, 438 255, 472 308 C 508 362, 608 318, 622 238 C 632 178, 592 145, 535 168"
+                      fill="none"
+                      stroke="#0038FF"
+                      strokeWidth="36"
+                      strokeLinecap="round"
+                      initial={{ pathLength: 0 }}
+                      animate={{ pathLength: 1 }}
+                      transition={{ duration: 0.7, delay: 0.68 }}
+                    />
+                  </g>
+
+                  {/* Black Aerosol Shading on "Go" */}
+                  <g filter="url(#black-spray-shade)">
+                    {/* G top-right black spray shadow */}
+                    <path
+                      d="M 395 108 C 345 142, 298 192, 325 215 C 365 235, 430 175, 442 132"
+                      fill="none"
+                      stroke="#080808"
+                      strokeWidth="34"
+                      strokeLinecap="round"
+                    />
+                    {/* G bottom diagonal black spray shadow */}
+                    <path
+                      d="M 192 432 C 265 405, 355 322, 405 256 L 265 284"
+                      fill="none"
+                      stroke="#080808"
+                      strokeWidth="36"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                    {/* 'o' right-side black spray shadow */}
+                    <path
+                      d="M 482 305 C 525 348, 605 305, 622 228 C 628 190, 605 165, 575 165"
+                      fill="none"
+                      stroke="#080808"
+                      strokeWidth="32"
+                      strokeLinecap="round"
+                    />
+                  </g>
+
+                  {/* ================= "HARD" (CENTER-RIGHT AGGRESSIVE HANDSTYLE) ================= */}
+                  <g filter="url(#graffiti-handstyle)">
+                    {/* Letter 'H' — Left vertical slash */}
+                    <motion.path
+                      d="M 472 342 C 432 448, 372 568, 338 648"
+                      fill="none"
+                      stroke="#0038FF"
+                      strokeWidth="42"
+                      strokeLinecap="round"
+                      initial={{ pathLength: 0 }}
+                      animate={{ pathLength: 1 }}
+                      transition={{ duration: 0.5, delay: 0.75 }}
+                    />
+                    {/* Letter 'H' — Right vertical slash */}
+                    <motion.path
+                      d="M 595 278 C 542 418, 482 558, 438 692"
+                      fill="none"
+                      stroke="#0038FF"
+                      strokeWidth="40"
+                      strokeLinecap="round"
+                      initial={{ pathLength: 0 }}
+                      animate={{ pathLength: 1 }}
+                      transition={{ duration: 0.55, delay: 0.82 }}
+                    />
+                    {/* Letter 'H' — Aggressive crossbar */}
+                    <motion.path
+                      d="M 332 548 C 415 512, 515 478, 608 446"
+                      fill="none"
+                      stroke="#0038FF"
+                      strokeWidth="38"
+                      strokeLinecap="round"
+                      initial={{ pathLength: 0 }}
+                      animate={{ pathLength: 1 }}
+                      transition={{ duration: 0.45, delay: 0.9 }}
+                    />
+
+                    {/* Letter 'A' — Tall pointed street A */}
+                    <motion.path
+                      d="M 548 612 C 605 478, 672 348, 725 256 C 710 385, 692 502, 684 608"
+                      fill="none"
+                      stroke="#0038FF"
+                      strokeWidth="38"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      initial={{ pathLength: 0 }}
+                      animate={{ pathLength: 1 }}
+                      transition={{ duration: 0.65, delay: 0.95 }}
+                    />
+                    {/* Letter 'A' — Crossbar */}
+                    <path
+                      d="M 580 502 C 638 485, 698 468, 745 452"
+                      fill="none"
+                      stroke="#0038FF"
+                      strokeWidth="32"
+                      strokeLinecap="round"
+                    />
+
+                    {/* Letter 'R' — Stem + Bowl + Kick Leg */}
+                    <motion.path
+                      d="M 792 248 C 765 368, 742 482, 725 578 M 775 268 C 858 212, 955 218, 938 282 C 922 342, 825 375, 755 392 C 818 432, 878 488, 938 525"
+                      fill="none"
+                      stroke="#0038FF"
+                      strokeWidth="38"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      initial={{ pathLength: 0 }}
+                      animate={{ pathLength: 1 }}
+                      transition={{ duration: 0.75, delay: 1.05 }}
+                    />
+
+                    {/* Letter 'D' — Tall Stem + Massive Sweeping Right Arrow/Wing */}
+                    <motion.path
+                      d="M 985 182 C 942 308, 902 425, 868 522 M 912 182 C 1055 178, 1212 212, 1218 258 C 1222 305, 1042 405, 868 508"
+                      fill="none"
+                      stroke="#0038FF"
+                      strokeWidth="40"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      initial={{ pathLength: 0 }}
+                      animate={{ pathLength: 1 }}
+                      transition={{ duration: 0.8, delay: 1.15 }}
+                    />
+                  </g>
+
+                  {/* Heavy Black Spray Accents on "HARD" (Matching reference contrast) */}
+                  <g filter="url(#black-spray-shade)">
+                    {/* H black shading */}
+                    <path
+                      d="M 328 552 L 485 495 M 462 562 L 442 632"
+                      stroke="#080808"
+                      strokeWidth="34"
+                      strokeLinecap="round"
+                    />
+                    {/* A black shading */}
+                    <path
+                      d="M 652 385 L 625 568 M 715 268 L 692 465"
+                      stroke="#080808"
+                      strokeWidth="32"
+                      strokeLinecap="round"
+                    />
+                    {/* R & D heavy black spray core */}
+                    <path
+                      d="M 795 225 C 865 205, 945 215, 985 192 C 945 315, 905 425, 872 515"
+                      fill="none"
+                      stroke="#080808"
+                      strokeWidth="48"
+                      strokeLinecap="round"
+                    />
+                    <path
+                      d="M 768 388 C 835 438, 895 492, 955 462 C 1015 432, 1085 362, 1112 332"
+                      fill="none"
+                      stroke="#080808"
+                      strokeWidth="44"
+                      strokeLinecap="round"
+                    />
+                  </g>
+
+                  {/* ================= VERTICAL PAINT DRIPS (Animated Gravity Drips) ================= */}
+                  {/* Blue Drip under H right leg (Bottom-most long drip in reference) */}
+                  <motion.g
+                    initial={{ scaleY: 0 }}
+                    animate={{ scaleY: 1 }}
+                    transition={{ duration: 1.4, delay: 1.35, ease: 'easeOut' }}
+                    style={{ originY: 0 }}
+                  >
+                    <path
+                      d="M 436 675 L 434 748"
+                      stroke="#0038FF"
+                      strokeWidth="7"
+                      strokeLinecap="round"
+                    />
+                    <circle cx="434" cy="751" r="5.5" fill="#0038FF" />
+
+                    {/* Blue Drip under R kick */}
+                    <path
+                      d="M 766 490 L 766 575"
+                      stroke="#0038FF"
+                      strokeWidth="5.5"
+                      strokeLinecap="round"
+                    />
+                    <circle cx="766" cy="578" r="4" fill="#0038FF" />
+
+                    {/* Black Drip under A right stem */}
+                    <path
+                      d="M 702 585 L 702 668"
+                      stroke="#0A0A0A"
+                      strokeWidth="6"
+                      strokeLinecap="round"
+                    />
+                    <circle cx="702" cy="671" r="4.5" fill="#0A0A0A" />
+
+                    {/* Black Drip under R/D stem */}
+                    <path
+                      d="M 912 490 L 912 582"
+                      stroke="#0A0A0A"
+                      strokeWidth="6"
+                      strokeLinecap="round"
+                    />
+                    <circle cx="912" cy="585" r="4.5" fill="#0A0A0A" />
+
+                    {/* Black Drip from D top bar */}
+                    <path
+                      d="M 906 188 L 905 256"
+                      stroke="#0A0A0A"
+                      strokeWidth="5.5"
+                      strokeLinecap="round"
+                    />
+                    <circle cx="905" cy="259" r="4" fill="#0A0A0A" />
+                  </motion.g>
+                </svg>
+              </motion.div>
+            </div>
+          </div>
+
+          {/* Subtle bottom spacer */}
+          <div className="h-4" />
+        </section>
+      );
+    };
+
+    /* ============================================================================
+       SECTION 2: SLOGAN ("ENDLESS NO LIMIT" + Giant Blue Spray Infinity Loop)
+       ============================================================================ */
+    const SloganSection = ({ onNavClick, onOpenModal }) => {
+      const sectionRef = useRef(null);
+      const { scrollYProgress } = useScroll({
+        target: sectionRef,
+        offset: ['start 85%', 'end 20%'],
+      });
+
+      const infinityScale = useTransform(scrollYProgress, [0, 0.45], [0.92, 1]);
+      const infinityRotate = useTransform(scrollYProgress, [0, 0.5], [-4, 0]);
+
+      return (
+        <section
+          id="slogan"
+          ref={sectionRef}
+          className="relative w-full min-h-screen concrete-section-2 overflow-hidden flex flex-col justify-between border-b border-black/10"
+        >
+          {/* Subtle Concrete Brush Marks & Grain Overlay */}
+          <svg
+            className="absolute inset-0 w-full h-full pointer-events-none z-0"
+            viewBox="0 0 1440 900"
+            preserveAspectRatio="xMidYMid slice"
+          >
+            <rect width="1440" height="900" filter="url(#concrete-grain)" />
+            {/* Distressed diagonal plaster brush marks matching top-left/bottom-left of Section 2 */}
+            <path
+              d="M0,0 L430,0 L350,280 L520,880 L0,900 Z"
+              fill="#DCE2EC"
+              opacity="0.65"
+              filter="url(#aerosol-spray)"
+            />
+          </svg>
+
+          {/* Section Header Bar (Matches reference layout) */}
+          <HeaderBar onNavClick={onNavClick} activeSection="CHANNELS" />
+
+          {/* Main Slogan Content Area */}
+          <div className="relative flex-1 flex items-center justify-center px-5 sm:px-9 md:px-12 py-10 z-10">
+            <div className="relative w-full max-w-[1380px] mx-auto min-h-[540px] sm:min-h-[620px] flex items-center">
+              {/* GIANT SPRAY-PAINTED BLUE INFINITY SYMBOL (∞) */}
+              <motion.div
+                style={{ scale: infinityScale, rotate: infinityRotate }}
+                className="absolute inset-0 flex items-center justify-center pointer-events-none z-10"
+              >
+                <svg
+                  viewBox="0 0 1440 820"
+                  className="w-[112%] sm:w-[106%] max-w-none h-auto overflow-visible"
+                >
+                  {/* Outer soft aerosol overspray halo */}
+                  <motion.path
+                    d="M 555 445 C 395 605, 195 695, 72 605 C -45 515, -15 335, 145 315 C 315 295, 455 385, 575 455 C 735 548, 955 645, 1175 568 C 1375 498, 1395 245, 1185 112 C 965 -25, 685 115, 535 325 C 465 422, 468 492, 555 445 Z"
+                    fill="none"
+                    stroke="#0038FF"
+                    strokeWidth="92"
+                    strokeLinecap="round"
+                    opacity="0.22"
+                    filter="url(#aerosol-spray)"
+                  />
+
+                  {/* Core high-density electric blue aerosol infinity loop */}
+                  <motion.path
+                    d="M 555 445 C 395 605, 195 695, 72 605 C -45 515, -15 335, 145 315 C 315 295, 455 385, 575 455 C 735 548, 955 645, 1175 568 C 1375 498, 1395 245, 1185 112 C 965 -25, 685 115, 535 325 C 465 422, 468 492, 555 445"
+                    fill="none"
+                    stroke="#0033FF"
+                    strokeWidth="62"
+                    strokeLinecap="round"
+                    filter="url(#aerosol-spray)"
+                    initial={{ pathLength: 0, opacity: 0 }}
+                    whileInView={{ pathLength: 1, opacity: 1 }}
+                    viewport={{ once: true, amount: 0.25 }}
+                    transition={{ duration: 1.35, ease: [0.22, 1, 0.36, 1] }}
+                  />
+
+                  {/* Secondary inner pass for authentic double-pass spray stroke on top-right arch */}
+                  <motion.path
+                    d="M 525 315 C 675 95, 975 -15, 1190 120 C 1365 232, 1355 478, 1165 558"
+                    fill="none"
+                    stroke="#0026CC"
+                    strokeWidth="36"
+                    strokeLinecap="round"
+                    filter="url(#graffiti-handstyle)"
+                    initial={{ pathLength: 0 }}
+                    whileInView={{ pathLength: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 1.1, delay: 0.3 }}
+                  />
+
+                  {/* Authentic Paint Drips on Left Loop Bottom & Center Crossover (Matching reference) */}
+                  <g fill="#0033FF" stroke="#0033FF" strokeLinecap="round">
+                    {/* Bottom-left drip 1 */}
+                    <line x1="86" y1="628" x2="86" y2="718" strokeWidth="6.5" />
+                    <circle cx="86" cy="721" r="5" />
+                    {/* Bottom-left drip 2 (longer) */}
+                    <line x1="118" y1="635" x2="118" y2="758" strokeWidth="7.5" />
+                    <circle cx="118" cy="762" r="5.5" />
+                    {/* Center crossover drip 1 */}
+                    <line x1="512" y1="468" x2="512" y2="545" strokeWidth="5.5" />
+                    <circle cx="512" cy="548" r="4" />
+                    {/* Center crossover drip 2 (longer) */}
+                    <line x1="534" y1="472" x2="534" y2="598" strokeWidth="7" />
+                    <circle cx="534" cy="602" r="5.5" />
+                    {/* Center crossover drip 3 */}
+                    <line x1="556" y1="475" x2="556" y2="528" strokeWidth="4.5" />
+                    {/* Fine black scratch marks inside right loop (as seen in reference) */}
+                    <path
+                      d="M 1150 375 L 1215 305 M 1175 362 L 1198 338"
+                      stroke="#111"
+                      strokeWidth="2"
+                      opacity="0.55"
+                    />
+                  </g>
+                </svg>
+              </motion.div>
+
+              {/* FOREGROUND CONTENT GRID: Left Massive Headline + Right Japanese Slogan Block */}
+              <div className="relative z-20 w-full grid grid-cols-1 lg:grid-cols-12 items-center gap-8">
+                {/* Left/Center: Massive "ENDLESS / NO LIMIT" */}
+                <div className="lg:col-span-8 flex flex-col items-start">
+                  <div className="overflow-hidden">
+                    <motion.h2
+                      initial={{ y: '100%' }}
+                      whileInView={{ y: '0%' }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+                      className="font-display text-[#0D0D0D] uppercase text-[14.5vw] sm:text-[13vw] lg:text-[148px] xl:text-[168px] leading-[0.88] tracking-[-0.035em]"
+                    >
+                      ENDLESS
+                    </motion.h2>
+                  </div>
+                  <div className="overflow-hidden mt-1">
+                    <motion.h2
+                      initial={{ y: '100%' }}
+                      whileInView={{ y: '0%' }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+                      className="font-display text-[#0D0D0D] uppercase text-[14.5vw] sm:text-[13vw] lg:text-[148px] xl:text-[168px] leading-[0.88] tracking-[-0.035em]"
+                    >
+                      NO LIMIT
+                    </motion.h2>
+                  </div>
+                </div>
+
+                {/* Right: Japanese SLOGAN Block (Positioned inside the right loop of the infinity symbol) */}
+                <motion.div
+                  initial={{ opacity: 0, y: 24 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.7, delay: 0.35 }}
+                  className="lg:col-span-4 lg:mt-28 lg:pl-4 max-w-[320px]"
+                >
+                  <p className="text-[10px] font-bold tracking-[0.14em] text-[#7A7F87] uppercase mb-2">
+                    UNIFIED PROTOCOL
+                  </p>
+                  <h3 className="font-jp font-black text-[22px] sm:text-[25px] tracking-[0.22em] text-[#0D0D0D] mb-3 leading-tight">
+                    全チャンネルを1つのAPIへ
+                  </h3>
+                  <p className="font-jp text-[11px] sm:text-[11.5px] font-medium leading-[1.85] text-[#22252A] tracking-[0.04em]">
+                    NOTIFORAはWhatsApp、Email、SMS、Push、Telegram、
+                    <br />
+                    そしてIn-App通知を単一のイベント駆動コアへ統合。
+                    <br />
+                    無限のスループットと確実な配信を提供します。
+                  </p>
+                </motion.div>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom-Right "VIEW MORE ↗" CTA */}
+          <div className="relative z-20 px-5 sm:px-9 md:px-12 pb-8 flex justify-end">
+            <motion.button
+              onClick={() =>
+                onOpenModal({
+                  tag: 'MULTI-CHANNEL NOTIFICATION ENGINE',
+                  title: 'ENDLESS NO LIMIT THROUGHPUT',
+                  subtitle: 'Satu API terpadu untuk WhatsApp, Email, Push, SMS, Slack & In-App.',
+                  body: 'Notifora mengeliminasi arsitektur notifikasi yang rumit. Cukup kirim satu payload event, sistem cerdas kami menangani digest, retry otomatis, routing failover, dan preference subscriber secara instan tanpa batas kuota sempit.',
+                })
+              }
+              whileHover="hover"
+              className="group flex items-center gap-3 text-[#0D0D0D] focus:outline-none"
+            >
+              <span className="text-[11px] sm:text-[12px] font-extrabold tracking-[0.1em] uppercase group-hover:text-[#0033FF] transition-colors">
+                VIEW MORE
+              </span>
+              <motion.svg
+                width="26"
+                height="26"
+                viewBox="0 0 28 28"
+                fill="none"
+                variants={{
+                  hover: { x: 4, y: -4, scale: 1.08 },
+                }}
+                transition={{ type: 'spring', stiffness: 350, damping: 18 }}
+                className="text-[#0D0D0D] group-hover:text-[#0033FF] transition-colors"
+              >
+                <path
+                  d="M6 22L22 6M22 6H9M22 6V19"
+                  stroke="currentColor"
+                  strokeWidth="2.8"
+                  strokeLinecap="square"
+                />
+              </motion.svg>
+            </motion.button>
+          </div>
+        </section>
+      );
+    };
+
+    /* ============================================================================
+       SECTION 3: TOP MESSAGE ("DISPATCH EVERY SINGLE EVENT...")
+       ============================================================================ */
+    const TopMessageSection = ({ onNavClick, onOpenModal }) => {
+      return (
+        <section
+          id="top-message"
+          className="relative w-full min-h-screen concrete-section-3 overflow-hidden flex flex-col justify-between"
+        >
+          {/* Top Plaster Grunge Texture Overlay */}
+          <svg
+            className="absolute inset-0 w-full h-full pointer-events-none z-0"
+            viewBox="0 0 1440 900"
+            preserveAspectRatio="xMidYMid slice"
+          >
+            <rect width="1440" height="900" filter="url(#concrete-grain)" />
+            {/* Top-left and top-right grey concrete brush washes matching reference */}
+            <path
+              d="M0,0 L720,0 C620,120 350,165 0,190 Z"
+              fill="#D4DCE7"
+              opacity="0.55"
+              filter="url(#aerosol-spray)"
+            />
+            <path
+              d="M980,0 L1440,0 L1440,260 C1240,210 1090,140 980,0 Z"
+              fill="#CCD5E2"
+              opacity="0.55"
+              filter="url(#aerosol-spray)"
+            />
+          </svg>
+
+          {/* Header Bar */}
+          <HeaderBar onNavClick={onNavClick} activeSection="WORKFLOW" />
+
+          {/* Main Typography + Graffiti Signature Container */}
+          <div className="relative flex-1 flex flex-col justify-center px-4 sm:px-8 md:px-10 pt-6 pb-14 z-10">
+            <div className="relative w-full max-w-[1400px] mx-auto">
+              {/* 5-LINE MASSIVE GROTESQUE BLACK TYPOGRAPHY BLOCK */}
+              <div className="relative z-10 flex flex-col items-start space-y-0.5 sm:space-y-1">
+                {/* LINE 1: "DISPATCH" + Inline "CORE ENGINE" Japanese Block on the right */}
+                <div className="w-full flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-7">
+                  <div className="overflow-hidden shrink-0">
+                    <motion.h2
+                      initial={{ y: '100%' }}
+                      whileInView={{ y: '0%' }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.65, ease: [0.16, 1, 0.3, 1] }}
+                      className="font-display text-[#0D0D0D] uppercase text-[12vw] sm:text-[9.5vw] lg:text-[98px] xl:text-[112px] leading-[0.9] tracking-[-0.03em]"
+                    >
+                      DISPATCH
+                    </motion.h2>
+                  </div>
+
+                  {/* Japanese Top Message Sub-Block aligned next to DISPATCH */}
+                  <motion.div
+                    initial={{ opacity: 0, x: 20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.65, delay: 0.25 }}
+                    className="flex flex-col justify-center pt-1 lg:pt-2"
+                  >
+                    <span className="text-[10px] font-bold tracking-[0.14em] text-[#7A7F87] uppercase mb-1">
+                      CORE ENGINE
+                    </span>
+                    <p className="font-jp font-extrabold text-[13.5px] sm:text-[16px] xl:text-[19px] text-[#0D0D0D] tracking-[0.04em] leading-snug">
+                      全てのイベントをミリ秒で処理し、確実な配信を実現する通知コア。
+                    </p>
+                  </motion.div>
+                </div>
+
+                {/* LINE 2: "EVERY SINGLE EVENT" */}
+                <div className="overflow-hidden w-full">
+                  <motion.h2
+                    initial={{ y: '100%' }}
+                    whileInView={{ y: '0%' }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.65, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+                    className="font-display text-[#0D0D0D] uppercase text-[9.2vw] sm:text-[8.1vw] lg:text-[96px] xl:text-[111px] leading-[0.91] tracking-[-0.032em]"
+                  >
+                    EVERY SINGLE EVENT
+                  </motion.h2>
+                </div>
+
+                {/* LINE 3: "ACROSS ALL CHANNELS" */}
+                <div className="overflow-hidden w-full">
+                  <motion.h2
+                    initial={{ y: '100%' }}
+                    whileInView={{ y: '0%' }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.65, delay: 0.16, ease: [0.16, 1, 0.3, 1] }}
+                    className="font-display text-[#0D0D0D] uppercase text-[9.2vw] sm:text-[8.1vw] lg:text-[96px] xl:text-[111px] leading-[0.91] tracking-[-0.032em]"
+                  >
+                    ACROSS ALL CHANNELS
+                  </motion.h2>
+                </div>
+
+                {/* LINE 4: "ZERO LATENCY" */}
+                <div className="overflow-hidden w-full">
+                  <motion.h2
+                    initial={{ y: '100%' }}
+                    whileInView={{ y: '0%' }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.65, delay: 0.24, ease: [0.16, 1, 0.3, 1] }}
+                    className="font-display text-[#0D0D0D] uppercase text-[9.2vw] sm:text-[8.1vw] lg:text-[96px] xl:text-[111px] leading-[0.91] tracking-[-0.032em]"
+                  >
+                    ZERO LATENCY
+                  </motion.h2>
+                </div>
+
+                {/* LINE 5: “FAST” AND “RELIABLE”. */}
+                <div className="overflow-hidden w-full">
+                  <motion.h2
+                    initial={{ y: '100%' }}
+                    whileInView={{ y: '0%' }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.65, delay: 0.32, ease: [0.16, 1, 0.3, 1] }}
+                    className="font-display text-[#0D0D0D] uppercase text-[9.2vw] sm:text-[8.1vw] lg:text-[96px] xl:text-[111px] leading-[0.91] tracking-[-0.032em]"
+                  >
+                    “FAST” AND “RELIABLE”.
+                  </motion.h2>
+                </div>
+              </div>
+
+              {/* FOREGROUND BLUE SPRAY GRAFFITI SIGNATURE (Tag + Long Diagonal Slash) */}
+              <div className="relative lg:absolute left-0 right-0 -bottom-16 sm:-bottom-24 lg:-bottom-28 z-20 pointer-events-none flex justify-center lg:justify-end">
+                <svg
+                  viewBox="0 0 1350 420"
+                  className="w-full lg:w-[95%] h-auto overflow-visible"
+                >
+                  <g filter="url(#graffiti-handstyle)">
+                    {/* Cyan-blue lighter spray underglow on left R loop */}
+                    <motion.path
+                      d="M 480 345 C 460 265, 495 165, 585 155 C 665 145, 675 215, 575 262 C 485 305, 445 340, 565 348 C 655 352, 745 315, 815 282"
+                      fill="none"
+                      stroke="#0066FF"
+                      strokeWidth="20"
+                      strokeLinecap="round"
+                      opacity="0.85"
+                      initial={{ pathLength: 0 }}
+                      whileInView={{ pathLength: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.9, delay: 0.45 }}
+                    />
+
+                    {/* Main electric cobalt blue street signature tag */}
+                    <motion.path
+                      d="M 525 135 C 485 215, 445 298, 412 365 M 408 245 C 435 145, 575 95, 665 112 C 745 128, 705 215, 585 258 C 665 265, 735 285, 795 245 C 835 215, 805 182, 765 215 C 725 248, 755 295, 825 268 C 885 242, 945 155, 1025 92 C 985 168, 945 245, 922 292 C 975 255, 1045 235, 1065 268 C 1085 298, 1015 315, 975 298 C 1055 282, 1155 228, 1215 235 C 1265 242, 1245 285, 1135 288"
+                      fill="none"
+                      stroke="#0038FF"
+                      strokeWidth="26"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      initial={{ pathLength: 0 }}
+                      whileInView={{ pathLength: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 1.15, delay: 0.35, ease: 'easeOut' }}
+                    />
+
+                    {/* Heavy aerosol flare on right end of signature */}
+                    <motion.path
+                      d="M 1115 242 C 1185 222, 1245 235, 1235 265 C 1225 292, 1115 288, 1065 285"
+                      fill="none"
+                      stroke="#0033FF"
+                      strokeWidth="38"
+                      strokeLinecap="round"
+                      initial={{ opacity: 0 }}
+                      whileInView={{ opacity: 0.9 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.5, delay: 1.1 }}
+                    />
+
+                    {/* Long sweeping underline slash across entire bottom */}
+                    <motion.path
+                      d="M 135 398 C 465 348, 885 298, 1340 245"
+                      fill="none"
+                      stroke="#0038FF"
+                      strokeWidth="22"
+                      strokeLinecap="round"
+                      initial={{ pathLength: 0 }}
+                      whileInView={{ pathLength: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.65, delay: 0.95, ease: 'easeOut' }}
+                    />
+                    {/* Secondary thinner underline speed-stroke */}
+                    <motion.path
+                      d="M 485 375 C 785 335, 1085 298, 1345 268"
+                      fill="none"
+                      stroke="#0055FF"
+                      strokeWidth="9"
+                      strokeLinecap="round"
+                      initial={{ pathLength: 0 }}
+                      whileInView={{ pathLength: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.55, delay: 1.1 }}
+                    />
+                  </g>
+                </svg>
+              </div>
+            </div>
+          </div>
+
+          {/* Bottom-Right "VIEW MORE ↗" CTA */}
+          <div className="relative z-30 px-5 sm:px-9 md:px-12 pb-8 pt-6 flex justify-end">
+            <motion.button
+              onClick={() =>
+                onOpenModal({
+                  tag: 'EVENT-DRIVEN DISPATCH CORE',
+                  title: 'ZERO DROPPED EVENTS AT SCALE',
+                  subtitle: 'Arsitektur berbasis Redis Queue dan MySQL dengan retry otomatis dan fallback antar-channel.',
+                  body: 'Event yang diterima API langsung tersimpan sebelum diproses (respons ingress ditargetkan di bawah 50ms p95). Pengiriman berjalan di background worker dengan retry bertahap. Dilengkapi fallback: jika WhatsApp gagal terkirim, pesan dialihkan otomatis ke Email atau Telegram sesuai workflow yang kamu atur.',
+                })
+              }
+              whileHover="hover"
+              className="group flex items-center gap-3 text-[#0D0D0D] focus:outline-none"
+            >
+              <span className="text-[11px] sm:text-[12px] font-extrabold tracking-[0.1em] uppercase group-hover:text-[#0033FF] transition-colors">
+                VIEW MORE
+              </span>
+              <motion.svg
+                width="26"
+                height="26"
+                viewBox="0 0 28 28"
+                fill="none"
+                variants={{
+                  hover: { x: 4, y: -4, scale: 1.08 },
+                }}
+                transition={{ type: 'spring', stiffness: 350, damping: 18 }}
+                className="text-[#0D0D0D] group-hover:text-[#0033FF] transition-colors"
+              >
+                <path
+                  d="M6 22L22 6M22 6H9M22 6V19"
+                  stroke="currentColor"
+                  strokeWidth="2.8"
+                  strokeLinecap="square"
+                />
+              </motion.svg>
+            </motion.button>
+          </div>
+        </section>
+      );
+    };
+
+    /* ============================================================================
+       INTERACTIVE SPRAY PAINT CANVAS LAYER (Optional Street-Art UX Easter Egg)
+       ============================================================================ */
+    const SprayCanvasLayer = ({ enabled, clearTrigger }) => {
+      const canvasRef = useRef(null);
+      const isDrawing = useRef(false);
+
+      useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        const resize = () => {
+          canvas.width = window.innerWidth;
+          canvas.height = document.documentElement.scrollHeight;
+        };
+        resize();
+        window.addEventListener('resize', resize);
+        return () => window.removeEventListener('resize', resize);
+      }, []);
+
+      useEffect(() => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }, [clearTrigger]);
+
+      const sprayAt = (x, y) => {
+        const canvas = canvasRef.current;
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+
+        // Soft aerosol core
+        const grad = ctx.createRadialGradient(x, y, 2, x, y, 26);
+        grad.addColorStop(0, 'rgba(0, 56, 255, 0.38)');
+        grad.addColorStop(0.6, 'rgba(0, 56, 255, 0.12)');
+        grad.addColorStop(1, 'rgba(0, 56, 255, 0)');
+        ctx.fillStyle = grad;
+        ctx.beginPath();
+        ctx.arc(x, y, 26, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Stipple droplets around nozzle
+        ctx.fillStyle = '#0038FF';
+        for (let i = 0; i < 28; i++) {
+          const angle = Math.random() * Math.PI * 2;
+          const radius = Math.random() * 28;
+          const dx = x + Math.cos(angle) * radius;
+          const dy = y + Math.sin(angle) * radius;
+          const size = Math.random() * 2.2;
+          ctx.fillRect(dx, dy, size, size);
+        }
+      };
+
+      const handlePointerDown = (e) => {
+        if (!enabled) return;
+        isDrawing.current = true;
+        sprayAt(e.pageX, e.pageY);
+      };
+
+      const handlePointerMove = (e) => {
+        if (!enabled || !isDrawing.current) return;
+        sprayAt(e.pageX, e.pageY);
+      };
+
+      const handlePointerUp = () => {
+        isDrawing.current = false;
+      };
+
+      return (
+        <canvas
+          ref={canvasRef}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          className={`absolute inset-0 z-30 ${
+            enabled ? 'pointer-events-auto spray-cursor-active' : 'pointer-events-none'
+          }`}
+        />
+      );
+    };
+
+    /* ============================================================================
+       MAIN APPLICATION COMPONENT
+       ============================================================================ */
+    const App = () => {
+      const [modalData, setModalData] = useState(null);
+      const [sprayMode, setSprayMode] = useState(false);
+      const [clearCount, setClearCount] = useState(0);
+      const [showStickyNav, setShowStickyNav] = useState(false);
+
+      // Smooth mouse coordinates for Hero parallax
+      const rawMouseX = useMotionValue(0);
+      const rawMouseY = useMotionValue(0);
+      const smoothMouseX = useSpring(rawMouseX, { stiffness: 90, damping: 22 });
+      const smoothMouseY = useSpring(rawMouseY, { stiffness: 90, damping: 22 });
+
+      useEffect(() => {
+        const handleMouseMove = (e) => {
+          const nx = e.clientX / window.innerWidth - 0.5;
+          const ny = e.clientY / window.innerHeight - 0.5;
+          rawMouseX.set(nx);
+          rawMouseY.set(ny);
+        };
+
+        const handleScroll = () => {
+          setShowStickyNav(window.scrollY > 260);
+        };
+
+        window.addEventListener('mousemove', handleMouseMove);
+        window.addEventListener('scroll', handleScroll, { passive: true });
+        return () => {
+          window.removeEventListener('mousemove', handleMouseMove);
+          window.removeEventListener('scroll', handleScroll);
+        };
+      }, [rawMouseX, rawMouseY]);
+
+      // Smooth navigation handler for Header links
+      const handleNavClick = (section) => {
+        if (section === 'HOME' || section === 'OVERVIEW') {
+          document.getElementById('hero')?.scrollIntoView({ behavior: 'smooth' });
+        } else if (section === 'ABOUT' || section === 'CHANNELS') {
+          document.getElementById('slogan')?.scrollIntoView({ behavior: 'smooth' });
+        } else if (section === 'SERVICE' || section === 'WORKFLOW') {
+          document.getElementById('top-message')?.scrollIntoView({ behavior: 'smooth' });
+        } else {
+          const infoMap = {
+            DOCS: {
+              tag: 'DEVELOPER EXPERIENCE',
+              title: 'INTEGRATE IN UNDER 5 MINUTES',
+              subtitle: 'REST API sederhana. Cukup satu request untuk memicu workflow multi-channel (SDK menyusul).',
+              body: 'Trigger workflow dengan satu request:\n\ncurl -X POST https://api.notifora.my.id/v1/events/trigger \\\n  -H "Authorization: Bearer ntf_live_..." \\\n  -H "X-Idempotency-Key: order-9901" \\\n  -H "Content-Type: application/json" \\\n  -d \'{"workflow":"order-confirmed","to":{"subscriberId":"usr_102","email":"user@domain.com","phone":"0812-3456-7890"},"payload":{"invoiceId":"INV-9901","amount":450000}}\'\n\nRetry otomatis dengan exponential backoff, idempotency key, dan log pengiriman real-time.',
+            },
+            PRICING: {
+              tag: 'TRANSPARENT USAGE PRICING',
+              title: 'PAY FOR WHAT YOU DISPATCH',
+              subtitle: 'Tanpa lock-in kontrak. Mulai gratis untuk developer, scale saat traffic naik.',
+              body: '• Starter: 10.000 events/bln — Rp 99.000/bln (Multi-channel, 7 hari activity log)\n• Pro: 50.000 events/bln — Rp 299.000/bln (Digest engine, custom branding, 30 hari log)\n• Business: 250.000 events/bln — Rp 799.000/bln (Dedicated queue, priority routing)\n• Scale: 1.000.000+ events/bln — Rp 1.999.000/bln (Dedicated Redis/DB cluster + SLA 99.99%)',
+            },
+            CONTACT: {
+              tag: 'CONSOLE & API ACCESS',
+              title: 'START TRIGGERING EVENTS',
+              subtitle: 'Dapatkan API Key dan mulai kirim notifikasi sekarang.',
+              body: 'API Gateway: https://api.notifora.my.id\nWeb Console: https://notifora.my.id/console\nDocs & Reference: https://notifora.my.id/docs\nEngineering Contact: support@notifora.my.id / Telegram: @notifora_support',
+            },
+            NEWS: {
+              tag: 'LATEST UPDATES',
+              title: 'ROADMAP',
+              subtitle: 'Rilis 1.0 fokus pada WhatsApp, Email, Telegram, dan In-App Inbox.',
+              body: '1.0 — Trigger API, workflow (delay, filter, fallback), preferensi subscriber, In-App Inbox real-time, webhook bertanda tangan.\nSetelah 1.0 — Push, SMS, Slack, digest, dan SDK resmi.',
+            },
+            RECRUIT: {
+              tag: 'JOIN THE CORE TEAM',
+              title: 'BUILDING REBEL INFRASTRUCTURE',
+              subtitle: 'Kami mencari distributed systems engineer & backend enthusiast.',
+              body: 'Tertarik mengoptimasi Redis pipelines, low-latency queues, dan resilient microservices? Hubungi kami di support@notifora.my.id.',
+            },
+          };
+          setModalData(infoMap[section] || infoMap.CONTACT);
+        }
+      };
+
+      return (
+        <div className="relative min-h-screen w-full overflow-x-hidden">
+          {/* Interactive Spray Paint Canvas Overlay (Toggled via bottom-left pill) */}
+          <SprayCanvasLayer enabled={sprayMode} clearTrigger={clearCount} />
+
+          {/* Floating Sticky Header on Scroll */}
+          <AnimatePresence>
+            {showStickyNav && (
+              <motion.div
+                initial={{ y: -60, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: -60, opacity: 0 }}
+                transition={{ duration: 0.25 }}
+              >
+                <HeaderBar onNavClick={handleNavClick} activeSection="" isSticky />
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* 1. HERO SECTION ("GO HARD") */}
+          <HeroSection
+            mouseX={smoothMouseX}
+            mouseY={smoothMouseY}
+            onNavClick={handleNavClick}
+          />
+
+          {/* 2. SLOGAN SECTION ("ENDLESS NO LIMIT") */}
+          <SloganSection
+            onNavClick={handleNavClick}
+            onOpenModal={(data) => setModalData(data)}
+          />
+
+          {/* 3. TOP MESSAGE SECTION ("MAXIMIZE EVERYONE'S POTENTIAL...") */}
+          <TopMessageSection
+            onNavClick={handleNavClick}
+            onOpenModal={(data) => setModalData(data)}
+          />
+
+          {/* Minimal Interactive Street-Art Toolbar (Bottom-Left) */}
+          <div className="fixed bottom-4 left-4 z-40 flex items-center gap-2">
+            <button
+              onClick={() => setSprayMode(!sprayMode)}
+              className={`px-3.5 py-2 text-[10px] font-extrabold tracking-[0.14em] uppercase transition-all border shadow-sm flex items-center gap-2 ${
+                sprayMode
+                  ? 'bg-[#0033FF] text-white border-[#0033FF] shadow-[0_0_20px_rgba(0,51,255,0.5)]'
+                  : 'bg-white/90 backdrop-blur-md text-[#0D0D0D] border-black/15 hover:border-[#0033FF]'
+              }`}
+            >
+              <span
+                className={`w-2 h-2 rounded-full ${
+                  sprayMode ? 'bg-white animate-ping' : 'bg-[#0033FF]'
+                }`}
+              />
+              {sprayMode ? 'SPRAY MODE: ON (DRAG TO TAG)' : 'TRY SPRAY CAN'}
+            </button>
+
+            {sprayMode && (
+              <button
+                onClick={() => setClearCount((c) => c + 1)}
+                className="px-3 py-2 text-[10px] font-extrabold tracking-[0.12em] uppercase bg-[#0D0D0D] text-white hover:bg-[#0033FF] transition-colors"
+              >
+                CLEAR WALL
+              </button>
+            )}
+          </div>
+
+          {/* Brutalist Detail Modal (For VIEW MORE ↗ & Nav Items) */}
+          <AnimatePresence>
+            {modalData && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setModalData(null)}
+                className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4"
+              >
+                <motion.div
+                  initial={{ y: 40, scale: 0.96, opacity: 0 }}
+                  animate={{ y: 0, scale: 1, opacity: 1 }}
+                  exit={{ y: 20, scale: 0.96, opacity: 0 }}
+                  transition={{ type: 'spring', damping: 22, stiffness: 260 }}
+                  onClick={(e) => e.stopPropagation()}
+                  className="relative w-full max-w-xl bg-[#F4F6F9] border-2 border-[#0D0D0D] p-7 sm:p-10 shadow-[12px_12px_0px_#0033FF]"
+                >
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-[10px] font-extrabold tracking-[0.16em] text-[#0033FF] uppercase">
+                      {modalData.tag}
+                    </span>
+                    <button
+                      onClick={() => setModalData(null)}
+                      className="text-xs font-black tracking-widest uppercase px-2.5 py-1 border border-black/20 hover:bg-[#0D0D0D] hover:text-white transition-colors"
+                    >
+                      CLOSE ✕
+                    </button>
+                  </div>
+
+                  <h3 className="font-display text-2xl sm:text-4xl text-[#0D0D0D] uppercase mb-3 leading-none">
+                    {modalData.title}
+                  </h3>
+
+                  <p className="font-jp font-bold text-sm text-[#0D0D0D] mb-4">
+                    {modalData.subtitle}
+                  </p>
+
+                  <p className="font-jp text-xs sm:text-sm leading-relaxed text-[#333] whitespace-pre-line mb-6">
+                    {modalData.body}
+                  </p>
+
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => setModalData(null)}
+                      className="bg-[#0D0D0D] hover:bg-[#0033FF] text-white text-[11px] font-extrabold tracking-[0.14em] uppercase px-6 py-3 transition-colors flex items-center gap-2"
+                    >
+                      <span>BACK TO CANVAS</span>
+                      <span>↗</span>
+                    </button>
+                  </div>
+                </motion.div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      );
+    };
+
+    const root = createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
