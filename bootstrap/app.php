@@ -1,7 +1,10 @@
 <?php
 
 use App\Http\Middleware\ApiRateLimit;
+use App\Http\Middleware\BlockedClients;
+use App\Http\Middleware\EnsurePlatformAdmin;
 use App\Http\Middleware\IdempotencyGuard;
+use App\Http\Middleware\PlatformMaintenance;
 use App\Http\Middleware\RequireRole;
 use App\Http\Middleware\SetCurrentEnvironment;
 use App\Http\Middleware\SetRequestId;
@@ -35,12 +38,18 @@ return Application::configure(basePath: dirname(__DIR__))
             'internal' => VerifyInternalSecret::class,
             'env.set' => SetCurrentEnvironment::class,
             'role' => RequireRole::class,
+            'platform.admin' => EnsurePlatformAdmin::class,
         ]);
+        // Blokir IP & mode maintenance berlaku untuk web dan API
+        $middleware->appendToGroup('web', [BlockedClients::class, PlatformMaintenance::class]);
+        $middleware->appendToGroup('api', [BlockedClients::class, PlatformMaintenance::class]);
         $middleware->api(prepend: [SetRequestId::class]);
         // Environment aktif harus terpasang sebelum route-model binding agar query ter-scope.
         $middleware->prependToPriorityList(before: SubstituteBindings::class, prepend: SetCurrentEnvironment::class);
         $middleware->redirectGuestsTo(fn () => route('login'));
-        $middleware->redirectUsersTo(fn () => route('console.dashboard'));
+        $middleware->redirectUsersTo(fn () => auth()->user()?->isPlatformAdmin() && ! auth()->user()->currentMembership()
+            ? route('admin.dashboard')
+            : route('console.dashboard'));
         $middleware->trustProxies(at: '*');
         $middleware->validateCsrfTokens(except: ['api/payment/*', 'api/webhooks/*']);
     })

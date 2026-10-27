@@ -13,7 +13,12 @@ class Workspace extends Model
 
     protected $guarded = [];
 
-    protected $casts = ['plan_expires_at' => 'datetime', 'plan_started_at' => 'datetime'];
+    protected $casts = [
+        'plan_expires_at' => 'datetime',
+        'plan_started_at' => 'datetime',
+        'suspended_at' => 'datetime',
+        'custom_limits' => 'array',
+    ];
 
     public function environments()
     {
@@ -55,8 +60,20 @@ class Workspace extends Model
     public function planConfig(): array
     {
         $key = $this->effectivePlanKey();
+        $base = $key === 'free' ? config('notifora.free_plan') : config("notifora.plans.$key");
 
-        return $key === 'free' ? config('notifora.free_plan') : config("notifora.plans.$key");
+        // Batas kustom dari admin menimpa nilai plan (hanya events, rpm, retention_days)
+        $custom = collect($this->custom_limits ?? [])
+            ->only(['events', 'rpm', 'retention_days'])
+            ->filter(fn ($v) => $v !== null && $v !== '')
+            ->map(fn ($v) => (int) $v)->all();
+
+        return array_merge($base, $custom);
+    }
+
+    public function isSuspended(): bool
+    {
+        return $this->suspended_at !== null;
     }
 
     public function graceEndsAt(): ?Carbon

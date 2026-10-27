@@ -39,7 +39,7 @@ Authorization: Bearer ntf_live_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
   <table>
     <thead><tr><th>Plan</th><th>Rate limit</th><th>Kuota event / bulan</th></tr></thead>
     <tbody>
-      @foreach (config('notifora.plans') as $p)
+      @foreach (\App\Services\PlanCatalog::purchasable() as $p)
       <tr><td>{{ $p['label'] }}</td><td>{{ number_format($p['rpm'], 0, ',', '.') }} req/menit</td><td>{{ number_format($p['events'], 0, ',', '.') }}</td></tr>
       @endforeach
       <tr><td>Free</td><td>{{ number_format(config('notifora.free_plan.rpm'), 0, ',', '.') }} req/menit</td><td>{{ number_format(config('notifora.free_plan.events'), 0, ',', '.') }}</td></tr>

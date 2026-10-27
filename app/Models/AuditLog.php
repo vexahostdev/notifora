@@ -28,7 +28,7 @@ class AuditLog extends Model
             'action' => $action,
             'target_type' => $targetType,
             'target_id' => $targetId,
-            'meta' => $meta ?: null,
+            'meta' => ($meta + (session('impersonator_id') ? ['impersonated_by' => session('impersonator_id')] : [])) ?: null,
             'ip' => request()?->ip(),
             'created_at' => now(),
         ]);

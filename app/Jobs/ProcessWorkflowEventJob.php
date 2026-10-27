@@ -24,7 +24,7 @@ class ProcessWorkflowEventJob implements ShouldQueue
 
     public function handle(WorkflowEngine $engine): void
     {
-        Environment::run($this->environmentId, function () use ($engine) {
+        Environment::run($this->environmentId, function (Environment $env) use ($engine) {
             $event = NotificationEvent::find($this->eventId);
             if (! $event) {
                 return;
@@ -33,6 +33,14 @@ class ProcessWorkflowEventJob implements ShouldQueue
                 ['notification_event_id' => $event->id],
                 ['environment_id' => $event->environment_id, 'status' => ExecutionStatus::PENDING],
             );
+
+            // Workspace ditangguhkan setelah event diterima: jangan kirim apa pun.
+            if ($env->workspace?->isSuspended()) {
+                $engine->cancel($execution);
+
+                return;
+            }
+
             $engine->start($execution);
         });
     }

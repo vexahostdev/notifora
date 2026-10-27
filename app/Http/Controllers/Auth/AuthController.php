@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
+use App\Models\BlockedEntity;
 use App\Models\User;
 use App\Services\InvitationService;
+use App\Services\PlatformSettings;
 use App\Services\SystemNotifier;
 use App\Services\WorkspaceProvisioner;
 use Illuminate\Http\Request;
@@ -25,13 +27,35 @@ class AuthController extends Controller
     {
         $cred = $request->validate(['email' => ['required', 'email'], 'password' => ['required', 'string']]);
 
-        if (! Auth::attempt($cred, $request->boolean('remember'))) {
+        $user = User::where('email', $cred['email'])->first();
+        if (! $user || ! Hash::check($cred['password'], $user->password)) {
             return back()->withInput($request->only('email'))->withErrors(['email' => 'Email atau password salah.']);
         }
-        $request->session()->regenerate();
-        $this->acceptPendingInvite($request, $invites);
+        if ($user->isSuspended()) {
+            return back()->withInput($request->only('email'))->withErrors(['email' => 'Akun ditangguhkan. Hubungi '.config('notifora.support_email').'.']);
+        }
 
-        return redirect()->intended(route('console.dashboard'));
+        // 2FA: login baru selesai setelah kode TOTP / kode pemulihan diverifikasi
+        if ($user->hasTwoFactor()) {
+            $request->session()->put('2fa', ['user_id' => $user->id, 'remember' => $request->boolean('remember'), 'at' => time()]);
+
+            return redirect()->route('two-factor.challenge');
+        }
+
+        return $this->finishLogin($request, $user, $request->boolean('remember'));
+    }
+
+    /** Menyelesaikan login (setelah password, dan 2FA bila aktif). */
+    public function finishLogin(Request $request, User $user, bool $remember = false)
+    {
+        Auth::login($user, $remember);
+        $request->session()->regenerate();
+        $user->forceFill(['last_login_at' => now(), 'last_login_ip' => $request->ip()])->save();
+        $this->acceptPendingInvite($request, app(InvitationService::class));
+
+        $home = $user->isPlatformAdmin() && ! $user->currentMembership() ? route('admin.dashboard') : route('console.dashboard');
+
+        return redirect()->intended($home);
     }
 
     public function showRegister(Request $request)
@@ -44,6 +68,10 @@ class AuthController extends Controller
         $inviteToken = $request->session()->get('invite_token');
         $invite = $inviteToken ? $invites->find($inviteToken) : null;
 
+        if (! $invite && ! PlatformSettings::bool('signup_enabled')) {
+            return back()->withInput()->withErrors(['email' => 'Pendaftaran akun baru sedang ditutup sementara. Hubungi '.config('notifora.support_email').'.']);
+        }
+
         $data = $request->validate([
             'name' => ['required', 'string', 'max:100'],
             'team' => ['nullable', 'string', 'max:100'],
@@ -51,6 +79,10 @@ class AuthController extends Controller
             'password' => ['required', 'confirmed', PasswordRule::min(10)->letters()->numbers()],
             'terms' => ['accepted'],
         ]);
+
+        if (BlockedEntity::emailBlocked($data['email'])) {
+            return back()->withInput()->withErrors(['email' => 'Domain email ini tidak dapat digunakan untuk mendaftar.']);
+        }
 
         // Email pengundang harus sama dengan email undangan
         if ($invite && strcasecmp($invite->email, $data['email']) !== 0) {

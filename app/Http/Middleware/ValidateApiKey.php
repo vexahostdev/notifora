@@ -23,6 +23,9 @@ class ValidateApiKey
         if (! $key || $key->isRevoked() || ! $key->environment) {
             return ApiResponse::error('unauthenticated', 'Invalid or revoked API key.', 401);
         }
+        if ($key->environment->workspace?->isSuspended()) {
+            return ApiResponse::error('workspace_suspended', 'This workspace is suspended. Contact '.config('notifora.support_email').'.', 403);
+        }
 
         app()->instance('current.environment', $key->environment);
         $request->attributes->set('api_key', $key);

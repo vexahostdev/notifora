@@ -7,6 +7,7 @@ import { workflowTester } from './components/workflow-tester';
 import { dashboardCharts } from './components/dashboard';
 import { notiforaInbox } from './components/inbox';
 import { paymentStatus } from './components/billing';
+import { adminCharts, qrCode } from './components/admin';
 
 Alpine.plugin(collapse);
 Alpine.plugin(focus);
@@ -28,6 +29,8 @@ Alpine.data('workflowTester', workflowTester);
 Alpine.data('dashboardCharts', dashboardCharts);
 Alpine.data('notiforaInbox', notiforaInbox);
 Alpine.data('paymentStatus', paymentStatus);
+Alpine.data('adminCharts', adminCharts);
+Alpine.data('qrCode', qrCode);
 
 Alpine.data('copy', (text) => ({
   done: false,

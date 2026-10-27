@@ -7,7 +7,9 @@ use App\Models\AuditLog;
 use App\Models\Payment;
 use App\Models\User;
 use App\Models\Workspace;
+use App\Services\CouponService;
 use App\Services\Payments\XenditService;
+use App\Services\PlanCatalog;
 use App\Services\SystemNotifier;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -17,10 +19,10 @@ class BillingService
 {
     public function __construct(private XenditService $xendit, private SystemNotifier $notifier) {}
 
-    /** @return array<string,array> plan berbayar */
+    /** @return array<string,array> plan berbayar yang boleh dibeli (aktif) */
     public function plans(): array
     {
-        return config('notifora.plans');
+        return PlanCatalog::purchasable();
     }
 
     public function periods(): array
@@ -31,13 +33,25 @@ class BillingService
     public function quote(string $plan, int $months): int
     {
         if (! isset($this->plans()[$plan])) {
-            throw new ApiException('validation_failed', 'Plan tidak dikenal.', 422);
+            throw new ApiException('validation_failed', 'Plan tidak dikenal atau tidak tersedia.', 422);
         }
         if (! in_array($months, $this->periods(), true)) {
             throw new ApiException('validation_failed', 'Durasi tidak valid.', 422);
         }
 
         return (int) ($this->plans()[$plan]['price'] * $months);
+    }
+
+    /** Pratinjau harga dengan kupon opsional (dipakai halaman checkout). */
+    public function preview(Workspace $ws, string $plan, int $months, ?string $coupon): array
+    {
+        $subtotal = $this->quote($plan, $months);
+        $discount = 0;
+        if ($coupon !== null && trim($coupon) !== '') {
+            $discount = app(CouponService::class)->evaluate($coupon, $ws, $plan, $months, $subtotal)['discount'];
+        }
+
+        return ['subtotal' => $subtotal, 'discount' => $discount, 'total' => max(0, $subtotal - $discount)];
     }
 
     /** Plan aktif berbayar dan belum lewat masa berlaku? */
@@ -52,17 +66,27 @@ class BillingService
         if (! $this->hasActivePaidPlan($ws)) {
             return;
         }
-        $current = $this->plans()[$ws->plan]['price'] ?? 0;
+        $current = PlanCatalog::all()[$ws->plan]['price'] ?? 0;
         if (($this->plans()[$plan]['price'] ?? 0) < $current) {
             throw new ApiException('validation_failed', 'Plan lebih rendah dari plan aktif Anda tidak dapat dibeli sebelum masa berlaku berakhir.', 422);
         }
     }
 
-    /** Buat Payment + invoice Xendit. Payment tetap tersimpan bila Xendit gagal (status FAILED). */
-    public function createCheckout(Workspace $ws, User $user, string $plan, int $months, string $method): Payment
+    /**
+     * Buat Payment + invoice Xendit. Payment tetap tersimpan bila Xendit gagal (status FAILED).
+     * Bila kupon membuat total Rp 0, pembayaran langsung dilunasi tanpa Xendit.
+     */
+    public function createCheckout(Workspace $ws, User $user, string $plan, int $months, string $method, ?string $couponCode = null): Payment
     {
-        $amount = $this->quote($plan, $months);
+        $subtotal = $this->quote($plan, $months);
         $this->assertCanPurchase($ws, $plan);
+
+        $coupon = null;
+        $discount = 0;
+        if ($couponCode !== null && trim($couponCode) !== '') {
+            ['coupon' => $coupon, 'discount' => $discount] = app(CouponService::class)->evaluate($couponCode, $ws, $plan, $months, $subtotal);
+        }
+        $amount = max(0, $subtotal - $discount);
 
         $number = Payment::nextNumber();
         $payment = Payment::create([
@@ -71,11 +95,25 @@ class BillingService
             'user_id' => $user->id,
             'plan' => $plan,
             'months' => $months,
+            'subtotal' => $subtotal,
+            'discount' => $discount,
+            'coupon_code' => $coupon?->code,
             'amount' => $amount,
             'status' => Payment::PENDING,
             'external_id' => $number.'-'.Str::upper(Str::random(4)),  // prefix "NTF-" = routing di VexaHost
             'expires_at' => now()->addSeconds((int) config('notifora.billing.invoice_ttl')),
         ]);
+        if ($coupon) {
+            app(CouponService::class)->redeem($coupon, $payment, $ws);
+        }
+
+        AuditLog::record($ws->id, 'billing.checkout_created', 'payment', $payment->id, ['number' => $number, 'plan' => $plan, 'months' => $months, 'amount' => $amount, 'coupon' => $coupon?->code]);
+
+        if ($amount === 0) {
+            $this->settle($payment, 'COUPON');
+
+            return $payment->fresh();
+        }
 
         $res = $this->xendit->createInvoice($payment, $user, $ws, $method);
         if (! $res['success']) {
@@ -83,7 +121,6 @@ class BillingService
             throw new ApiException('payment_unavailable', $res['error'] ?? 'Gagal membuat invoice.', 502);
         }
 
-        AuditLog::record($ws->id, 'billing.checkout_created', 'payment', $payment->id, ['number' => $number, 'plan' => $plan, 'months' => $months, 'amount' => $amount]);
         $this->notifier->invoiceCreated($ws, $payment->fresh(), $user);
 
         return $payment->fresh();

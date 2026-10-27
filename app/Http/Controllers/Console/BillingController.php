@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Payment;
 use App\Services\Billing\BillingService;
 use App\Services\Payments\XenditService;
+use App\Services\PlatformSettings;
 use App\Services\UsageMeter;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -47,6 +48,10 @@ class BillingController extends Controller
             $blocked = $e->getMessage();
         }
 
+        if (! $blocked && ! PlatformSettings::bool('checkout_enabled')) {
+            $blocked = 'Checkout sedang dinonaktifkan sementara. Coba lagi nanti.';
+        }
+
         $months = (int) $request->query('months', 1);
 
         return view('console.billing.checkout', [
@@ -64,19 +69,45 @@ class BillingController extends Controller
         ]);
     }
 
-    public function store(Request $request)
+    /** Pratinjau harga dengan kupon (dipanggil halaman checkout). */
+    public function couponPreview(Request $request)
     {
         $data = $request->validate([
             'plan' => ['required', Rule::in(array_keys($this->billing->plans()))],
             'months' => ['required', 'integer', Rule::in($this->billing->periods())],
+            'coupon' => ['nullable', 'string', 'max:40'],
+        ]);
+
+        try {
+            return response()->json($this->billing->preview(app('current.workspace'), $data['plan'], (int) $data['months'], $data['coupon'] ?? null));
+        } catch (ApiException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
+    }
+
+    public function store(Request $request)
+    {
+        if (! PlatformSettings::bool('checkout_enabled')) {
+            return back()->withInput()->withErrors(['checkout' => 'Checkout sedang dinonaktifkan sementara. Coba lagi nanti atau hubungi support.']);
+        }
+
+        $data = $request->validate([
+            'plan' => ['required', Rule::in(array_keys($this->billing->plans()))],
+            'months' => ['required', 'integer', Rule::in($this->billing->periods())],
             'method' => ['required', Rule::in(array_keys(XenditService::METHODS))],
+            'coupon' => ['nullable', 'string', 'max:40'],
             'terms' => ['accepted'],
         ], ['terms.accepted' => 'Anda harus menyetujui syarat pembayaran.']);
 
         try {
-            $payment = $this->billing->createCheckout(app('current.workspace'), $request->user(), $data['plan'], (int) $data['months'], $data['method']);
+            $payment = $this->billing->createCheckout(app('current.workspace'), $request->user(), $data['plan'], (int) $data['months'], $data['method'], $data['coupon'] ?? null);
         } catch (ApiException $e) {
             return back()->withInput()->withErrors(['checkout' => $e->getMessage()]);
+        }
+
+        // Kupon 100%: sudah lunas tanpa invoice Xendit
+        if (! $payment->invoice_url) {
+            return redirect()->route('console.billing.payments.show', $payment->id)->with('success', 'Plan aktif. Tidak ada pembayaran yang diperlukan.');
         }
 
         return redirect()->away($payment->invoice_url);

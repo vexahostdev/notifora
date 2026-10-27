@@ -15,11 +15,20 @@ class User extends Authenticatable
 
     protected $fillable = ['name', 'email', 'password'];
 
-    protected $hidden = ['password', 'remember_token'];
+    protected $hidden = ['password', 'remember_token', 'two_factor_secret', 'two_factor_recovery_codes'];
 
     protected function casts(): array
     {
-        return ['email_verified_at' => 'datetime', 'password' => 'hashed'];
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+            'is_platform_admin' => 'boolean',
+            'suspended_at' => 'datetime',
+            'two_factor_secret' => 'encrypted',
+            'two_factor_recovery_codes' => 'encrypted:array',
+            'two_factor_confirmed_at' => 'datetime',
+            'last_login_at' => 'datetime',
+        ];
     }
 
     /** Email reset password memakai layout bermerek (Brevo SMTP) lewat SystemNotifier. */
@@ -44,5 +53,20 @@ class User extends Authenticatable
     public function roleIn(string $workspaceId): ?MemberRole
     {
         return $this->memberships()->where('workspace_id', $workspaceId)->first()?->role;
+    }
+
+    public function hasTwoFactor(): bool
+    {
+        return $this->two_factor_confirmed_at !== null && $this->two_factor_secret !== null;
+    }
+
+    public function isSuspended(): bool
+    {
+        return $this->suspended_at !== null;
+    }
+
+    public function isPlatformAdmin(): bool
+    {
+        return (bool) $this->is_platform_admin;
     }
 }

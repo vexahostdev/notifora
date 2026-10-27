@@ -3,7 +3,7 @@
     <thead><tr><th>Plan</th><th>Harga / bulan</th><th>Event / bulan</th><th>Retensi log</th><th>Rate limit</th></tr></thead>
     <tbody>
       <tr><td>Free</td><td>Rp 0</td><td>{{ number_format(config('notifora.free_plan.events'), 0, ',', '.') }}</td><td>{{ config('notifora.free_plan.retention_days') }} hari</td><td>{{ config('notifora.free_plan.rpm') }} req/menit</td></tr>
-      @foreach (config('notifora.plans') as $p)
+      @foreach (\App\Services\PlanCatalog::purchasable() as $p)
       <tr><td><strong>{{ $p['label'] }}</strong></td><td>Rp {{ number_format($p['price'], 0, ',', '.') }}</td><td>{{ number_format($p['events'], 0, ',', '.') }}</td><td>{{ $p['retention_days'] }} hari</td><td>{{ number_format($p['rpm'], 0, ',', '.') }} req/menit</td></tr>
       @endforeach
     </tbody>

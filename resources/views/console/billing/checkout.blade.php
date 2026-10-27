@@ -13,7 +13,20 @@
 
 <form method="POST" action="{{ route('console.billing.store') }}" class="grid lg:grid-cols-3 gap-5"
       x-data="{ months: {{ $months }}, price: {{ $plan['price'] }}, base: {{ $baseTs }}, method: 'all',
-                get total() { return this.price * this.months },
+                coupon: @js(old('coupon', '')), discount: 0, couponMsg: '', couponOk: false, checking: false,
+                async applyCoupon() {
+                  this.couponMsg = ''; this.discount = 0; this.couponOk = false;
+                  if (!this.coupon.trim()) return;
+                  this.checking = true;
+                  try {
+                    const r = await fetch('{{ route('console.billing.coupon-preview') }}', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content }, body: JSON.stringify({ plan: '{{ $planKey }}', months: this.months, coupon: this.coupon }) });
+                    const j = await r.json();
+                    if (r.ok) { this.discount = j.discount; this.couponOk = true; this.couponMsg = 'Kupon diterapkan: hemat ' + this.rp(j.discount); }
+                    else { this.couponMsg = j.message || (j.errors ? Object.values(j.errors)[0][0] : 'Kupon tidak valid.'); }
+                  } catch (e) { this.couponMsg = 'Gagal memeriksa kupon.'; }
+                  this.checking = false;
+                },
+                get total() { return Math.max(0, this.price * this.months - this.discount) },
                 get until() { const d = new Date(this.base * 1000); d.setMonth(d.getMonth() + this.months);
                   return d.toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) },
                 rp(n) { return 'Rp ' + n.toLocaleString('id-ID') } }">
@@ -26,7 +39,7 @@
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
         @foreach ($periods as $m)
           <label class="cursor-pointer">
-            <input type="radio" name="months" value="{{ $m }}" class="peer sr-only" x-model.number="months" @checked($m === $months)>
+            <input type="radio" name="months" value="{{ $m }}" class="peer sr-only" x-model.number="months" @change="$nextTick(() => applyCoupon())" @checked($m === $months)>
             <span class="block rounded-md border border-line p-3 text-center peer-checked:border-cobalt peer-checked:bg-cobalt/10 peer-focus-visible:ring-2 ring-cobalt">
               <span class="block font-semibold text-white">{{ $m }} bulan</span>
               <span class="block text-xs font-mono text-zinc-400 mt-1">Rp {{ number_format($plan['price'] * $m, 0, ',', '.') }}</span>
@@ -51,6 +64,15 @@
       @error('method')<p class="error-text">{{ $message }}</p>@enderror
     </fieldset>
 
+    <fieldset class="card card-pad">
+      <legend class="font-semibold text-white mb-3">3. Kode kupon (opsional)</legend>
+      <div class="flex gap-2">
+        <input name="coupon" x-model="coupon" @keydown.enter.prevent="applyCoupon()" maxlength="40" class="input input-mono uppercase max-w-xs" placeholder="KODEKUPON" aria-label="Kode kupon" autocomplete="off">
+        <button type="button" class="btn-secondary" @click="applyCoupon()" :disabled="checking">Terapkan</button>
+      </div>
+      <p class="text-sm mt-2" :class="couponOk ? 'text-ok' : 'text-err'" x-show="couponMsg" x-text="couponMsg" role="status"></p>
+    </fieldset>
+
     <label class="flex items-start gap-2 text-sm text-zinc-300">
       <input type="checkbox" name="terms" value="1" required class="mt-1 accent-[#0033FF]" @checked(old('terms'))>
       <span>Saya memahami bahwa plan aktif otomatis setelah pembayaran terkonfirmasi, invoice berlaku 24 jam, dan pembayaran yang sudah berhasil tidak dapat dibatalkan dari halaman ini (hubungi support untuk bantuan).</span>
@@ -66,10 +88,11 @@
         <div class="flex justify-between"><dt class="text-zinc-400">Plan</dt><dd class="text-white">{{ $plan['label'] }}</dd></div>
         <div class="flex justify-between"><dt class="text-zinc-400">Durasi</dt><dd class="text-white" x-text="months + ' bulan'"></dd></div>
         <div class="flex justify-between"><dt class="text-zinc-400">Harga / bulan</dt><dd class="font-mono text-white" x-text="rp(price)"></dd></div>
+        <div class="flex justify-between" x-show="discount > 0" x-cloak><dt class="text-zinc-400">Diskon kupon</dt><dd class="font-mono text-ok" x-text="'− ' + rp(discount)"></dd></div>
         <div class="flex justify-between"><dt class="text-zinc-400">{{ $renewing ? 'Berlaku sampai (setelah perpanjang)' : 'Aktif sampai' }}</dt><dd class="text-right text-white" x-text="until"></dd></div>
       </dl>
       <div class="border-t border-line pt-3 flex items-end justify-between"><span class="text-zinc-400 text-sm">Total</span><span class="font-mono text-2xl font-semibold text-white" x-text="rp(total)">Rp {{ number_format($plan['price'] * $months, 0, ',', '.') }}</span></div>
-      <button class="btn-primary w-full" @disabled($blocked || ! $configured)><x-icon name="card" />Bayar sekarang</button>
+      <button class="btn-primary w-full" @disabled($blocked || ! $configured)><x-icon name="card" /><span x-text="total === 0 ? 'Aktifkan gratis' : 'Bayar sekarang'">Bayar sekarang</span></button>
       <p class="hint text-center">Dialihkan ke Xendit (QRIS, VA, Indomaret). Harga dalam Rupiah.</p>
     </div>
   </aside>

@@ -19,6 +19,8 @@ class Payment extends Model
 
     public const CANCELED = 'CANCELED';
 
+    public const REFUNDED = 'REFUNDED';
+
     protected $guarded = [];
 
     protected $hidden = ['raw'];

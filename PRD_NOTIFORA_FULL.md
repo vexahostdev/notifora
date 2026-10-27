@@ -263,7 +263,19 @@ Tiap modul punya acceptance criteria (AC) yang menjadi dasar test.
 ### M12 — Dashboard
 - KPI: total event, success rate, rata-rata latensi (enqueue→SENT), share per channel, 20 error terbaru, grafik 24 jam/7 hari/30 hari.
 
----
+
+### M13 — Platform Admin Panel (SUDAH DIIMPLEMENTASI)
+Panel operator di `/admin` (kode: `app/Http/Controllers/Admin`, `resources/views/admin`, dokumentasi: `docs/ADMIN.md`). Berbeda dari peran
+Owner/Admin/Developer/Viewer yang merupakan admin *tenant*.
+- **Akses:** `users.is_platform_admin`; non-operator mendapat 404; **2FA TOTP wajib** (`ADMIN_2FA_REQUIRED`, default true; false hanya development); akun ditangguhkan otomatis keluar; operator pertama dibuat dengan `php artisan notifora:make-admin <email> [--create]`.
+- **Tenant:** daftar/filter/cari, detail, suspend/unsuspend (API 403 `workspace_suspended`, Console terkunci, job workflow dibatalkan), grant/ubah plan manual + batas kustom (events/rpm/retensi), catatan internal, transfer owner, hapus anggota, cabut semua API key, impersonasi (banner + audit ganda), ekspor JSON, hapus permanen (konfirmasi slug).
+- **Pengguna:** suspend, reset 2FA, kirim reset password, verifikasi email manual, jadikan/cabut operator.
+- **Billing:** semua pembayaran, tandai lunas manual, void, refund (catat), kirim ulang invoice, sinkron Xendit, ekspor CSV, penampil `payment_events`, **editor plan di DB** (efek langsung, plan kustom, nonaktifkan), **kupon** (persen/nominal, batas, kedaluwarsa, per-plan; 100% = aktif tanpa invoice), laporan MRR/ARR/pendapatan 12 bulan.
+- **Operasional:** health check (DB, cache, queue, Redis, scheduler, SMTP, Xendit, socket, disk), job gagal (retry/hapus/flush), provider + circuit, webhook pelanggan, log pesan global, pencarian global.
+- **Abuse & keamanan:** blokir IP / domain email (web+API), pantauan rasio gagal, audit platform + audit tenant (aksi operator tampil sebagai "Notifora Support").
+- **Komunikasi:** pengumuman (banner Console), broadcast email berantrean, log email, template email (awalan subjek, catatan, on/off; email keamanan terkunci), uji SMTP.
+- **Platform:** mode maintenance (503), flag signup/checkout.
+Belum termasuk (ide lanjutan): refund otomatis via API Xendit, peran operator bertingkat (support vs finance), anomali penggunaan berbasis ML.
 
 ## 7. PROVIDER ABSTRACTION LAYER (PAL)
 

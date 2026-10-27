@@ -189,15 +189,74 @@ final class Mails
         ], 'provider-degraded');
     }
 
+    // ------------------------------------------------- Tindakan operator
+
+    public static function workspaceSuspended(Workspace $ws, ?string $reason): SystemMail
+    {
+        return new SystemMail("Workspace {$ws->name} ditangguhkan", [
+            'title' => 'Workspace ditangguhkan',
+            'tone' => 'danger',
+            'paragraphs' => ['Akses API dan Console untuk workspace ini dihentikan sementara oleh tim Notifora.'],
+            'details' => array_filter(['Workspace' => $ws->name, 'Alasan' => $reason, 'Waktu' => self::dt(now())]),
+            'note' => 'Jika Anda merasa ini keliru, balas email ini atau hubungi '.config('notifora.support_email').'. Data Anda tetap aman.',
+        ], 'workspace-suspended');
+    }
+
+    public static function workspaceReinstated(Workspace $ws): SystemMail
+    {
+        return new SystemMail("Workspace {$ws->name} diaktifkan kembali", [
+            'title' => 'Workspace aktif kembali',
+            'tone' => 'success',
+            'paragraphs' => ['Penangguhan telah dicabut. API dan Console dapat digunakan seperti biasa.'],
+            'details' => ['Workspace' => $ws->name, 'Waktu' => self::dt(now())],
+            'cta' => ['label' => 'Buka Console', 'url' => self::console()],
+        ], 'workspace-reinstated');
+    }
+
+    public static function planGranted(Workspace $ws, string $planLabel, ?Carbon $until): SystemMail
+    {
+        return new SystemMail("Plan {$planLabel} diberikan untuk {$ws->name}", [
+            'title' => "Plan {$planLabel} diaktifkan",
+            'tone' => 'success',
+            'paragraphs' => ['Tim Notifora mengaktifkan plan untuk workspace Anda.'],
+            'details' => ['Workspace' => $ws->name, 'Plan' => $planLabel, 'Berlaku sampai' => $until ? self::dt($until) : 'Tanpa batas waktu'],
+            'cta' => ['label' => 'Lihat billing', 'url' => self::console('/billing')],
+        ], 'plan-granted');
+    }
+
+    public static function broadcast(string $subject, string $body): SystemMail
+    {
+        $normalized = str_replace(chr(13), '', $body);
+        $paragraphs = array_values(array_filter(array_map('trim', preg_split('/'.chr(10).'{2,}/', $normalized))));
+
+        return new SystemMail($subject, [
+            'title' => $subject,
+            'paragraphs' => $paragraphs,
+            'note' => 'Anda menerima email ini sebagai admin workspace Notifora.',
+        ], 'broadcast');
+    }
+
+    public static function smtpTest(string $by): SystemMail
+    {
+        return new SystemMail('Tes SMTP Notifora', [
+            'title' => 'Tes pengiriman email berhasil',
+            'tone' => 'success',
+            'paragraphs' => ['Email ini dikirim dari Admin → Email → Tes SMTP untuk memastikan kredensial Brevo berfungsi.'],
+            'details' => ['Dikirim oleh' => $by, 'Waktu' => self::dt(now())],
+        ], 'smtp-test');
+    }
+
     // ------------------------------------------------------------- Billing
 
     private static function paymentDetails(Payment $p): array
     {
-        return [
+        return array_filter([
             'No. invoice' => $p->number,
             'Plan' => $p->planLabel().' · '.$p->months.' bulan',
+            'Subtotal' => $p->discount > 0 ? self::rp($p->subtotal) : null,
+            'Diskon' => $p->discount > 0 ? '- '.self::rp($p->discount).($p->coupon_code ? " ({$p->coupon_code})" : '') : null,
             'Total' => self::rp($p->amount),
-        ];
+        ]);
     }
 
     public static function invoiceCreated(Workspace $ws, Payment $p): SystemMail

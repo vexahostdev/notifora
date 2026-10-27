@@ -25,6 +25,8 @@ class DatabaseSeeder extends Seeder
             return;
         }
 
+        $this->command?->call('notifora:make-admin');
+
         $user = User::firstOrCreate(['email' => 'demo@notifora.test'], ['name' => 'Demo Developer', 'password' => 'Password123']);
         if ($user->memberships()->exists()) {
             $this->command?->info('Demo sudah ada: demo@notifora.test / Password123');

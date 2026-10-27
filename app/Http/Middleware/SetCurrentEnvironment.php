@@ -3,6 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Enums\EnvironmentType;
+use App\Models\Announcement;
 use App\Models\Environment;
 use Closure;
 use Illuminate\Http\Request;
@@ -12,11 +13,27 @@ class SetCurrentEnvironment
 {
     public function handle(Request $request, Closure $next)
     {
-        $membership = $request->user()?->currentMembership();
+        $user = $request->user();
+
+        if ($user?->isSuspended() && ! session('impersonator_id')) {
+            auth()->logout();
+
+            return redirect()->route('login')->withErrors(['email' => 'Akun ditangguhkan. Hubungi '.config('notifora.support_email').'.']);
+        }
+
+        $membership = $user?->currentMembership();
         if (! $membership) {
+            // Operator platform tanpa workspace diarahkan ke panel admin
+            if ($user?->isPlatformAdmin()) {
+                return redirect()->route('admin.dashboard');
+            }
             auth()->logout();
 
             return redirect()->route('login')->withErrors(['email' => 'Akun belum terhubung ke workspace.']);
+        }
+
+        if ($membership->workspace->isSuspended() && ! session('impersonator_id')) {
+            return response()->view('console.suspended', ['workspace' => $membership->workspace], 403);
         }
 
         $envs = Environment::where('workspace_id', $membership->workspace_id)->get();
@@ -35,6 +52,7 @@ class SetCurrentEnvironment
             'currentWorkspace' => $membership->workspace,
             'currentRole' => $membership->role,
             'allEnvs' => $envs,
+            'liveAnnouncements' => Announcement::live()->latest()->limit(3)->get(),
         ]);
 
         return $next($request);

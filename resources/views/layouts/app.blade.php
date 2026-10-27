@@ -32,6 +32,17 @@
   ];
 @endphp
 
+@if (session('impersonator_id'))
+  <div class="bg-amber-500 text-black text-center text-xs font-semibold py-1.5 px-3 flex flex-wrap items-center justify-center gap-3" role="alert">
+    <span>Mode impersonasi: Anda masuk sebagai {{ auth()->user()->email }}. Semua aksi dicatat.</span>
+    <form method="POST" action="{{ route('impersonation.stop') }}">@csrf<button class="underline font-bold">Akhiri &amp; kembali ke Admin</button></form>
+  </div>
+@endif
+@foreach (($liveAnnouncements ?? collect()) as $ann)
+  @php $annTone = ['info' => 'bg-info/15 text-blue-200 border-info/40', 'success' => 'bg-ok/15 text-emerald-200 border-ok/40', 'warn' => 'bg-warn/15 text-amber-200 border-warn/40', 'danger' => 'bg-err/15 text-red-200 border-err/40'][$ann->tone] ?? 'bg-info/15 text-blue-200 border-info/40'; @endphp
+  <div class="border-b px-4 py-2 text-sm text-center {{ $annTone }}" role="status"><strong>{{ $ann->title }}</strong> — {{ $ann->body }}</div>
+@endforeach
+
 @if ($currentEnv->isProduction())
   <div class="bg-err text-white text-center text-xs font-mono font-bold py-1 tracking-wider">PRODUCTION — perubahan berdampak ke pengguna nyata</div>
 @endif
@@ -57,6 +68,9 @@
           <a href="{{ route($route) }}" class="nav-link {{ request()->routeIs($route === 'console.billing.index' ? 'console.billing.*' : $route) ? 'nav-link-active' : '' }}"><x-icon :name="$icon" />{{ $label }}</a>
         @endif
       @endforeach
+      @if (auth()->user()->isPlatformAdmin() && ! session('impersonator_id'))
+        <a href="{{ route('admin.dashboard') }}" class="nav-link mt-3 text-amber-300"><x-icon name="shield" />Admin panel</a>
+      @endif
     </nav>
     <div class="p-3 border-t border-line text-xs text-zinc-500">
       <p class="truncate text-zinc-300 font-medium">{{ $currentWorkspace->name }}</p>

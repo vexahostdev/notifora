@@ -6,6 +6,8 @@ use App\Mail\Mails;
 use App\Mail\SystemMail;
 use App\Models\ApiKey;
 use App\Models\ChannelProvider;
+use App\Models\EmailLog;
+use App\Models\EmailTemplate;
 use App\Models\Environment;
 use App\Models\Payment;
 use App\Models\User;
@@ -22,16 +24,32 @@ use Throwable;
 class SystemNotifier
 {
     /** @param string|array<int,string> $to */
-    public function deliver(string|array $to, SystemMail $mail): void
+    public function deliver(string|array $to, SystemMail $mail, ?string $workspaceId = null): void
     {
         $to = array_values(array_filter((array) $to));
         if (! $to) {
             return;
         }
 
+        $log = null;
+        try {
+            $template = EmailTemplate::find($mail->kind);
+            if ($template && ! $template->enabled) {
+                EmailLog::create(['kind' => $mail->kind, 'recipient' => mb_substr(implode(', ', $to), 0, 255), 'subject' => $mail->mailSubject, 'status' => 'skipped', 'workspace_id' => $workspaceId]);
+
+                return;
+            }
+            $template && $mail->applyTemplate($template);
+            $log = EmailLog::create(['kind' => $mail->kind, 'recipient' => mb_substr(implode(', ', $to), 0, 255), 'subject' => $mail->mailSubject, 'status' => 'queued', 'workspace_id' => $workspaceId]);
+            $mail->logId = $log->id;
+        } catch (Throwable $e) {
+            Log::warning('system_mail.log_failed', ['error' => $e->getMessage()]); // pencatatan tidak boleh menghalangi pengiriman
+        }
+
         try {
             Mail::to($to)->send($mail); // ShouldQueue: masuk antrean bila worker aktif, langsung kirim bila sync
         } catch (Throwable $e) {
+            $log?->update(['status' => 'failed', 'error' => mb_substr($e->getMessage(), 0, 500)]);
             Log::warning('system_mail.failed', ['kind' => $mail->kind, 'error' => $e->getMessage()]);
         }
     }
