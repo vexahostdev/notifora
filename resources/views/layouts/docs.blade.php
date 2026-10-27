@@ -3,13 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>@yield('title', 'Dokumentasi') — Notifora Docs</title>
+  <title>@yield('title', 'Dokumentasi') — {{ \App\Services\Brand::name() }} Docs</title>
   <meta name="description" content="@yield('description', 'Dokumentasi teknis Notifora: API, workflow, channel, inbox real-time, webhook, dan billing.')">
-  <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
-  <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32.png') }}">
-  <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
   @include('partials.theme-init')
   @vite(['resources/css/app.css', 'resources/js/docs.js'])
+  @include('partials.brand-head')
 </head>
 <body x-data="docsApp({ searchUrl: @js(route('docs.search')), slug: @js($slug ?? null) })" @keydown.window="onKey($event)" class="min-h-screen">
 @php $sections = config('docs.sections'); @endphp
@@ -19,8 +17,8 @@
   <div class="mx-auto max-w-[1400px] px-4 sm:px-6 h-14 flex items-center gap-4">
     <button class="lg:hidden btn-ghost btn-sm" @click="nav = true" aria-label="Buka menu dokumentasi"><x-icon name="menu" class="w-5 h-5" /></button>
     <a href="{{ route('landing') }}" class="flex items-center gap-2 shrink-0">
-      <img src="{{ asset('logo-sm.png') }}" alt="" width="26" height="26" class="w-[26px] h-[26px] bg-[#fff] rounded p-px">
-      <span class="font-extrabold tracking-[.08em] text-white text-sm">NOTIFORA</span>
+      <img src="{{ \App\Services\Brand::logoUrl() }}" alt="" width="26" height="26" class="w-[26px] h-[26px] bg-[#fff] rounded p-px">
+      <span class="font-extrabold tracking-[.08em] text-white text-sm uppercase">{{ \App\Services\Brand::name() }}</span>
     </a>
     <nav class="hidden md:flex items-center gap-1 ml-4 text-sm" aria-label="Utama">
       <a href="{{ route('landing') }}" class="px-3 py-1.5 rounded-md text-zinc-400 hover:text-white hover:bg-white/5">Beranda</a>

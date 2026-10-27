@@ -53,3 +53,32 @@ Setelah login, aktifkan 2FA di `/security/2fa` (aplikasi authenticator + 8 kode 
 
 `tests/Feature/AdminPanelTest.php` (36 tes): akses & 2FA, TOTP vektor RFC 6238, smoke test semua halaman, suspend, impersonasi,
 plan/limit, pembayaran, kupon, editor plan, blokir, maintenance, flag, email, broadcast, job gagal, health, pencarian.
+
+## Menu sistem & operasional (tambahan)
+
+| Menu | Rute | Fungsi |
+|---|---|---|
+| Workers & scheduler | `/admin/system/workers` | Status supervisor, denyut worker per antrean, scheduler, antrean menunggu; tombol restart worker, proses antrean sekarang, jalankan scheduler, bersihkan cache, optimize |
+| Kesiapan production | `/admin/system/readiness` | ±26 pemeriksaan (debug, HTTPS, cookie, 2FA, DB, queue, ekstensi PHP, worker, scheduler, backup, SMTP, Xendit) dengan saran perbaikan; tanpa menampilkan rahasia |
+| Backup database | `/admin/system/backups` | Cadangkan sekarang, unduh, hapus; jadwal harian 03:15 (`notifora:backup`), simpan N terbaru |
+| Log aplikasi | `/admin/system/logs` | Penampil `storage/logs` (filter level & teks, unduh) |
+| Branding & kontak | `/admin/system/branding` | Nama, tagline, logo, favicon, warna aksen, footer (`{year}`), email/WA dukungan, sosial media, profil perusahaan. Berlaku di situs, Console, docs, dan email |
+| SMTP & uji kirim | `/admin/emails/smtp` | Host/port/login/enkripsi/pengirim disimpan di DB (password terenkripsi APP_KEY), uji koneksi+login tanpa kirim, kirim email uji |
+
+### Peran operator
+`admin_role` pada pengguna operator (kosong = **super**, kompatibel dengan operator lama). Hanya super yang dapat memberi/mencabut akses dan mengubah peran; minimal satu super harus tersisa. Peran → bagian panel (`config/admin.php` → `roles`):
+
+| Peran | Bagian |
+|---|---|
+| Super | semua |
+| Finance | pembayaran, plan & kupon, laporan, tenants |
+| Support | tenants, pengguna, abuse, komunikasi, email (tanpa SMTP), audit |
+| Operasional | ops (job gagal, provider, webhook, log pesan), sistem, abuse, audit |
+
+Menu sidebar menyesuaikan peran; akses langsung ke bagian terlarang → 403.
+
+### Supervisor, worker, watchdog
+- `php artisan notifora:supervise` menjalankan semua worker (jumlah per antrean: `WORKER_PROCS_HIGH|DEFAULT|CHANNELS|WEBHOOKS`) + `schedule:run` tiap menit, me-restart proses mati dengan backoff, dan menulis status ke cache. `--dry-run` menampilkan rencana.
+- Setiap worker menulis denyut per antrean; Admin → Workers membaca denyut itu. **Restart worker** memakai `queue:restart` (worker selesai dulu dari job berjalan, supervisor menghidupkannya kembali dengan kode baru).
+- `notifora:watchdog` (tiap 5 menit) memeriksa antrean berisi tanpa worker, job tertua menunggu, scheduler mati, job gagal ≥ 25, backup basi, dan komponen health `fail`, lalu **mengirim email ke semua operator** (dedupe 30 menit; angka tidak dianggap masalah baru).
+- Hosting tanpa daemon: `WORKER_CRON_FALLBACK=true` menjadwalkan worker singkat tiap menit (cukup cron `* * * * * php artisan schedule:run`).

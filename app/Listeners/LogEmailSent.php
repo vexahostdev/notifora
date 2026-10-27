@@ -12,7 +12,11 @@ class LogEmailSent
     {
         $header = $event->message->getHeaders()->get('X-Notifora-Email-Log');
         if ($header) {
-            EmailLog::whereKey($header->getBodyAsString())->update(['status' => 'sent', 'sent_at' => now(), 'error' => null]);
+            EmailLog::whereKey($header->getBodyAsString())->update([
+                // mailer log/array hanya menulis ke berkas log: jangan berpura-pura terkirim
+                'status' => in_array(config('mail.default'), ['log', 'array'], true) ? 'logged' : 'sent',
+                'sent_at' => now(), 'error' => null,
+            ]);
         }
     }
 }

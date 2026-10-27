@@ -1,5 +1,7 @@
 # Deployment & Environment
 
+> Panduan langkah demi langkah untuk Coolify (termasuk kebutuhan server dan Stalwart mail server): [`COOLIFY.md`](COOLIFY.md).
+
 ## Domain
 
 | Environment | Situs + Console + Docs | API (`/v1`) | WebSocket |
@@ -70,3 +72,20 @@ docker compose exec notifora-app php artisan db:seed --force   # HANYA developme
 
 Scheduler (`notifora-scheduler`) menjalankan: retensi log harian, penyapuan billing tiap jam (invoice basi, pengingat plan,
 masa tenggang, turun ke Free), dan pembersihan job gagal.
+
+## Database: MySQL
+Semua environment memakai **MySQL/MariaDB** (`DB_CONNECTION=mysql`; lokal XAMPP: buat database `notifora`, user `root` tanpa password, lalu `php artisan migrate --seed`). Seluruh suite tes juga lulus di MariaDB 10.4 dan dijalankan di MySQL 8 pada CI (`phpunit.mysql.xml`, job `backend-mysql`). SQLite hanya dipakai tes cepat (`phpunit.xml`).
+
+## Menjalankan worker & scheduler
+Pilih satu:
+1. **Docker Compose** (`docker-compose.yml`): service `notifora-worker` (Supervisor per antrean) + `notifora-scheduler`; atau satu kontainer `ROLE=supervise` yang menjalankan `notifora:supervise`.
+2. **Server biasa**: `deploy/supervisor/notifora.conf` (Supervisor) atau `deploy/systemd/notifora-supervisor.service` (systemd); socket engine: `deploy/systemd/notifora-socket.service`; Nginx: `deploy/nginx/notifora.conf`.
+3. **Hosting bersama**: cron `* * * * * php artisan schedule:run` dan `WORKER_CRON_FALLBACK=true`.
+
+Rilis tanpa Docker: `deploy/scripts/deploy.sh <branch>` (composer, build aset, `migrate --force`, `storage:link`, `optimize`, `queue:restart`).
+
+## Backup
+`notifora:backup` berjalan harian 03:15 (`BACKUP_ENABLED`, simpan `BACKUP_KEEP` terbaru) ke `storage/app/backups` (`BACKUP_PATH` untuk lokasi lain). Butuh `mysqldump` (sudah ada di image Docker; `MYSQLDUMP_BINARY` bila tidak ada di PATH). Salin ke luar server dengan `deploy/scripts/backup-offsite.sh` (rclone) dan **uji restore** berkala: `gunzip -c backup.sql.gz | mysql -u USER -p DB`.
+
+## Verifikasi sebelum go-live
+Buka **Admin → Kesiapan production**; selesaikan semua item merah. Kirim email uji dari **Admin → SMTP & uji kirim**.

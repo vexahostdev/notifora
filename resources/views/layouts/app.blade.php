@@ -4,13 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="csrf-token" content="{{ csrf_token() }}">
-  <title>@yield('title', 'Console') — Notifora</title>
-  <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
-  <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32.png') }}">
-  <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
-  <meta name="theme-color" content="#2244A8">
+  <title>@yield('title', 'Console') — {{ \App\Services\Brand::name() }}</title>
   @include('partials.theme-init')
   @vite(['resources/css/app.css', 'resources/js/app.js'])
+  @include('partials.brand-head')
 </head>
 <body class="h-full" x-data="{ nav: false }">
 @php
@@ -53,8 +50,8 @@
 
   <aside :class="nav ? 'translate-x-0' : '-translate-x-full md:translate-x-0'" class="fixed md:sticky top-0 z-40 h-screen w-60 shrink-0 bg-surface-2 border-r border-line flex flex-col transition-transform">
     <div class="px-4 h-14 flex items-center gap-2 border-b border-line">
-      <span class="w-8 h-8 shrink-0 rounded-md bg-[#fff] border border-line flex items-center justify-center p-0.5"><img src="{{ asset('logo-sm.png') }}" alt="" width="28" height="28" class="w-7 h-7"></span>
-      <span class="font-extrabold tracking-[.08em] text-white text-sm">NOTIFORA</span>
+      <span class="w-8 h-8 shrink-0 rounded-md bg-[#fff] border border-line flex items-center justify-center p-0.5"><img src="{{ \App\Services\Brand::logoUrl() }}" alt="" width="28" height="28" class="w-7 h-7"></span>
+      <span class="font-extrabold tracking-[.08em] text-white text-sm uppercase truncate">{{ \App\Services\Brand::name() }}</span>
     </div>
     <nav class="flex-1 overflow-y-auto p-3 space-y-0.5" aria-label="Navigasi utama">
       @foreach ($links as [$route, $label, $icon, $match])
@@ -69,7 +66,7 @@
         @endif
       @endforeach
       @if (auth()->user()->isPlatformAdmin() && ! session('impersonator_id'))
-        <a href="{{ route('admin.dashboard') }}" class="nav-link mt-3 text-amber-300"><x-icon name="shield" />Admin panel</a>
+        <a href="{{ route('admin.dashboard') }}" class="nav-link mt-3"><x-icon name="shield" />Admin panel</a>
       @endif
     </nav>
     <div class="p-3 border-t border-line text-xs text-zinc-500">

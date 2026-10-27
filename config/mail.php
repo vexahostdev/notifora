@@ -79,9 +79,21 @@ return [
             'transport' => 'array',
         ],
 
+        // Stalwart (mail server sendiri) sebagai relay utama. Pakai MAIL_MAILER=failover agar jatuh ke Brevo (smtp) bila Stalwart mati.
+        'stalwart' => [
+            'transport' => 'smtp',
+            'scheme' => env('STALWART_SMTP_SCHEME'),
+            'host' => env('STALWART_SMTP_HOST', 'notifora-mail'),
+            'port' => env('STALWART_SMTP_PORT', 587),
+            'username' => env('STALWART_SMTP_USERNAME'),
+            'password' => env('STALWART_SMTP_PASSWORD'),
+            'timeout' => 10,
+        ],
+
         'failover' => [
             'transport' => 'failover',
             'mailers' => [
+                'stalwart',
                 'smtp',
                 'log',
             ],

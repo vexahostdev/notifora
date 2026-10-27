@@ -1,0 +1,21 @@
+# Alternatif Supervisor: systemd. Salin ke /etc/systemd/system/ lalu:
+#   systemctl daemon-reload && systemctl enable --now notifora-supervisor
+[Unit]
+Description=Notifora workers + scheduler (notifora:supervise)
+After=network-online.target mysql.service redis-server.service
+Wants=network-online.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/notifora
+ExecStart=/usr/bin/php artisan notifora:supervise
+Restart=always
+RestartSec=5
+TimeoutStopSec=60
+KillMode=control-group
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

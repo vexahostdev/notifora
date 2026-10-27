@@ -54,4 +54,30 @@ return [
         'channels' => 'notifora_channels',
         'webhooks' => 'notifora_webhooks',
     ],
+
+    // Supervisor bawaan (php artisan notifora:supervise). Jumlah proses per antrean + batas hidup worker.
+    'workers' => [
+        'procs' => [
+            'high' => (int) env('WORKER_PROCS_HIGH', 1),
+            'default' => (int) env('WORKER_PROCS_DEFAULT', 2),
+            'channels' => (int) env('WORKER_PROCS_CHANNELS', 3),
+            'webhooks' => (int) env('WORKER_PROCS_WEBHOOKS', 1),
+        ],
+        'max_time' => (int) env('WORKER_MAX_TIME', 3600),   // detik; worker di-recycle berkala
+        'memory' => (int) env('WORKER_MEMORY', 256),         // MB
+        'tries' => (int) env('WORKER_TRIES', 3),
+        'sleep' => (int) env('WORKER_SLEEP', 3),
+        // Mode tanpa daemon (hosting bersama): scheduler menjalankan worker singkat tiap menit
+        'cron_fallback' => (bool) env('WORKER_CRON_FALLBACK', false),
+        // Antrean menumpuk lebih lama dari ini (detik) dianggap bermasalah oleh watchdog
+        'backlog_alert_after' => (int) env('WORKER_BACKLOG_ALERT_AFTER', 600),
+    ],
+
+    // Backup database terjadwal (php artisan notifora:backup)
+    'backup' => [
+        'enabled' => (bool) env('BACKUP_ENABLED', true),
+        'keep' => (int) env('BACKUP_KEEP', 14),
+        'path' => env('BACKUP_PATH'),           // default storage/app/backups
+        'mysqldump' => env('MYSQLDUMP_BINARY', 'mysqldump'),
+    ],
 ];

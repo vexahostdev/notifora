@@ -236,6 +236,18 @@ final class Mails
         ], 'broadcast');
     }
 
+    /** @param array<int,string> $problems */
+    public static function opsAlert(array $problems): SystemMail
+    {
+        return new SystemMail('Peringatan operasional Notifora', [
+            'title' => count($problems).' masalah terdeteksi',
+            'tone' => 'danger',
+            'paragraphs' => array_slice($problems, 0, 10),
+            'details' => ['Lingkungan' => app()->environment(), 'Waktu' => self::dt(now())],
+            'note' => 'Buka Admin → Workers atau Kesiapan production untuk detail dan tindakan.',
+        ], 'ops-alert');
+    }
+
     public static function smtpTest(string $by): SystemMail
     {
         return new SystemMail('Tes SMTP Notifora', [

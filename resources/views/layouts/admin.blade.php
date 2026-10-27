@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="csrf-token" content="{{ csrf_token() }}">
   <meta name="robots" content="noindex,nofollow">
-  <title>@yield('title', 'Admin') — Notifora Admin</title>
-  <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
+  <title>@yield('title', 'Admin') — {{ \App\Services\Brand::name() }} Admin</title>
   @include('partials.theme-init')
   @vite(['resources/css/app.css', 'resources/js/app.js'])
+  @include('partials.brand-head')
 </head>
 <body class="h-full" x-data="{ nav: false }">
 @php
@@ -16,23 +16,25 @@
     'Ringkasan' => [['admin.dashboard', 'Dashboard', 'home'], ['admin.reports.index', 'Laporan', 'chart']],
     'Pelanggan' => [['admin.tenants.index', 'Tenants', 'team'], ['admin.users.index', 'Pengguna & operator', 'users']],
     'Billing' => [['admin.payments.index', 'Pembayaran', 'card'], ['admin.payments.events', 'Event pembayaran', 'webhook'], ['admin.plans.index', 'Plan & harga', 'list'], ['admin.coupons.index', 'Kupon', 'filter']],
-    'Operasional' => [['admin.ops.index', 'Kesehatan sistem', 'activity'], ['admin.ops.failed', 'Job gagal', 'alert'], ['admin.ops.providers', 'Provider', 'plug'], ['admin.ops.webhooks', 'Webhook pelanggan', 'webhook'], ['admin.ops.messages', 'Log pesan global', 'list']],
+    'Operasional' => [['admin.ops.index', 'Kesehatan sistem', 'activity'], ['admin.system.workers', 'Workers & scheduler', 'play'], ['admin.ops.failed', 'Job gagal', 'alert'], ['admin.ops.providers', 'Provider', 'plug'], ['admin.ops.webhooks', 'Webhook pelanggan', 'webhook'], ['admin.ops.messages', 'Log pesan global', 'list']],
     'Keamanan' => [['admin.abuse.index', 'Abuse & blokir', 'shield'], ['admin.audit', 'Audit log', 'clock']],
-    'Komunikasi' => [['admin.comms.announcements', 'Pengumuman', 'bell'], ['admin.comms.broadcasts', 'Broadcast email', 'bell'], ['admin.emails.logs', 'Log email', 'list'], ['admin.emails.templates', 'Template email', 'list']],
-    'Sistem' => [['admin.settings', 'Pengaturan platform', 'key']],
+    'Komunikasi' => [['admin.comms.announcements', 'Pengumuman', 'bell'], ['admin.comms.broadcasts', 'Broadcast email', 'bell'], ['admin.emails.logs', 'Log email', 'list'], ['admin.emails.templates', 'Template email', 'list'], ['admin.emails.smtp', 'SMTP & uji kirim', 'key']],
+    'Sistem' => [['admin.system.readiness', 'Kesiapan production', 'check'], ['admin.system.backups', 'Backup database', 'arrow-down'], ['admin.system.logs', 'Log aplikasi', 'list'], ['admin.system.branding', 'Branding & kontak', 'user'], ['admin.settings', 'Pengaturan platform', 'key']],
   ];
+  // Sembunyikan menu di luar peran operator
+  $groups = collect($groups)->map(fn ($links) => array_values(array_filter($links, fn ($l) => auth()->user()->canAdmin(\App\Http\Middleware\EnsurePlatformAdmin::section($l[0])))))->filter()->all();
   $hasWorkspace = (bool) auth()->user()->currentMembership();
 @endphp
 
-<div class="bg-amber-500 text-black text-center text-[11px] font-mono font-bold py-1 tracking-wider">PLATFORM ADMIN — {{ strtoupper(app()->environment()) }} — semua tindakan dicatat di audit log</div>
+<div class="{{ app()->isProduction() ? 'bg-err text-white' : 'bg-surface-2 text-zinc-400 border-b border-line' }} text-center text-[11px] font-mono font-bold py-1 tracking-wider">PLATFORM ADMIN — {{ strtoupper(app()->environment()) }} — semua tindakan dicatat di audit log</div>
 
 <div class="flex min-h-[calc(100%-1.5rem)]">
   <div x-show="nav" x-cloak @click="nav = false" class="fixed inset-0 bg-black/60 z-30 lg:hidden"></div>
 
-  <aside :class="nav ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'" class="fixed lg:sticky top-0 z-40 h-screen w-64 shrink-0 bg-surface-2 border-r border-line flex flex-col transition-transform">
+  <aside :class="nav ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'" class="fixed lg:sticky top-0 z-40 h-screen w-60 shrink-0 bg-surface-2 border-r border-line flex flex-col transition-transform">
     <div class="px-4 h-14 flex items-center gap-2 border-b border-line shrink-0">
-      <span class="w-8 h-8 shrink-0 rounded-md bg-[#fff] border border-line flex items-center justify-center p-0.5"><img src="{{ asset('logo-sm.png') }}" alt="" width="28" height="28" class="w-7 h-7"></span>
-      <div class="leading-tight"><span class="font-extrabold tracking-[.08em] text-white text-sm block">NOTIFORA</span><span class="text-[9px] font-mono font-bold tracking-widest text-amber-400">ADMIN</span></div>
+      <span class="w-8 h-8 shrink-0 rounded-md bg-[#fff] border border-line flex items-center justify-center p-0.5"><img src="{{ \App\Services\Brand::logoUrl() }}" alt="" width="28" height="28" class="w-7 h-7"></span>
+      <div class="leading-tight min-w-0"><span class="font-extrabold tracking-[.08em] text-white text-sm block uppercase truncate">{{ \App\Services\Brand::name() }}</span><span class="text-[9px] font-mono font-bold tracking-widest text-link">ADMIN</span></div>
     </div>
     <nav class="flex-1 overflow-y-auto p-3 space-y-4" aria-label="Navigasi admin">
       @foreach ($groups as $label => $links)
@@ -48,7 +50,7 @@
       <p class="truncate text-zinc-300 font-medium">{{ $admin->name }}</p>
       <p class="truncate font-mono">{{ $admin->email }}</p>
       <div class="flex gap-3 mt-2">
-        @if ($hasWorkspace)<a href="{{ route('console.dashboard') }}" class="text-link hover:underline">← Console</a>@endif
+        <a href="{{ route('console.dashboard') }}" class="text-link hover:underline">← Console (tampilan pengguna)</a>
         <a href="{{ route('security.2fa') }}" class="text-link hover:underline">2FA</a>
       </div>
     </div>

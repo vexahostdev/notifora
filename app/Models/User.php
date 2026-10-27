@@ -69,4 +69,23 @@ class User extends Authenticatable
     {
         return (bool) $this->is_platform_admin;
     }
+
+    /** Peran operator: null di DB dianggap super (kompatibel dengan operator lama). */
+    public function adminRole(): string
+    {
+        $r = $this->admin_role;
+
+        return ($r && array_key_exists($r, config('admin.roles'))) ? $r : 'super';
+    }
+
+    /** Boleh membuka bagian panel admin tertentu (lihat config admin.roles). */
+    public function canAdmin(string $section): bool
+    {
+        if (! $this->isPlatformAdmin()) {
+            return false;
+        }
+        $can = config('admin.roles.'.$this->adminRole().'.can', []);
+
+        return in_array('*', $can, true) || in_array($section, $can, true) || in_array($section, ['dashboard', 'search'], true);
+    }
 }

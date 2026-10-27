@@ -3,14 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>NOTIFORA — Satu API untuk semua notifikasi</title>
+  <title>{{ strtoupper(\App\Services\Brand::name()) }} — {{ \App\Services\Brand::tagline() }}</title>
   <meta name="description" content="Notifora: gateway notifikasi untuk WhatsApp, Email, Telegram, dan In-App Inbox. Satu API, retry otomatis, fallback antar-channel.">
-  <link rel="icon" href="{{ asset('favicon.ico') }}" sizes="any">
-  <link rel="icon" type="image/png" sizes="32x32" href="{{ asset('favicon-32.png') }}">
-  <link rel="apple-touch-icon" href="{{ asset('apple-touch-icon.png') }}">
-  <meta name="theme-color" content="#2244A8">
   @include('partials.theme-init')
   @vite(['resources/css/marketing.css', 'resources/js/marketing.js'])
+  @include('partials.brand-head')
 </head>
 <body x-data="{ menu: false }">
 {{-- Filter SVG dekoratif (nonaktif otomatis lewat reduced-motion tidak berlaku; filter statis) --}}
@@ -38,8 +35,8 @@
   {{-- HEADER --}}
   <header class="fixed top-0 inset-x-0 z-40 bg-concrete/80 backdrop-blur-md border-b border-ink/5 px-5 sm:px-9 md:px-12 py-3.5 flex items-center justify-between">
     <a href="#overview" class="group flex items-center gap-2">
-      <img src="{{ asset('logo-sm.png') }}" alt="" width="30" height="30" class="brand-logo w-[30px] h-[30px] transition-transform duration-300 group-hover:-rotate-6">
-      <span class="font-extrabold text-sm tracking-[.08em]">NOTIFORA</span>
+      <img src="{{ \App\Services\Brand::logoUrl() }}" alt="" width="30" height="30" class="brand-logo w-[30px] h-[30px] transition-transform duration-300 group-hover:-rotate-6">
+      <span class="font-extrabold text-sm tracking-[.08em] uppercase">{{ \App\Services\Brand::name() }}</span>
     </a>
     <nav class="hidden md:flex items-center gap-8" aria-label="Utama">
       @foreach (['overview' => 'OVERVIEW', 'channels' => 'CHANNELS', 'workflow' => 'WORKFLOW', 'docs' => 'DOCS', 'pricing' => 'PRICING'] as $id => $label)
@@ -186,7 +183,7 @@
   <footer class="bg-[#0d0d0d] text-[#e3e7ee] px-5 sm:px-9 md:px-12 py-10">
     <div class="max-w-[1300px] mx-auto flex flex-wrap items-center justify-between gap-4">
       <p class="font-mono text-xs flex items-center gap-2"><img src="{{ asset('logo-sm.png') }}" alt="" width="20" height="20" class="w-5 h-5 rounded-sm bg-white p-px">@include('partials.credit')</p>
-      <p class="font-mono text-xs text-zinc-500"><a href="mailto:support@notifora.my.id" class="hover:text-cobalt">support@notifora.my.id</a> · <a href="{{ url('/docs') }}" class="hover:text-cobalt">Docs</a></p>
+      <p class="font-mono text-xs text-zinc-500"><a href="mailto:{{ \App\Services\Brand::supportEmail() }}" class="hover:text-cobalt">{{ \App\Services\Brand::supportEmail() }}</a> · <a href="{{ url('/docs') }}" class="hover:text-cobalt">Docs</a></p>
     </div>
   </footer>
 

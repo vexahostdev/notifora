@@ -1,0 +1,15 @@
+# Socket engine (WSS inbox real-time). Salin ke /etc/systemd/system/
+[Unit]
+Description=Notifora socket engine
+After=network-online.target redis-server.service
+
+[Service]
+User=www-data
+WorkingDirectory=/var/www/notifora/socket-engine
+EnvironmentFile=/var/www/notifora/socket-engine/.env
+ExecStart=/usr/bin/node server.js
+Restart=always
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target

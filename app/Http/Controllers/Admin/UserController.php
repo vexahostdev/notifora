@@ -81,8 +81,26 @@ class UserController extends Controller
     }
 
     /** Beri / cabut akses operator platform. Selalu menyisakan minimal satu operator, dan tidak bisa mencabut diri sendiri. */
+    /** Atur peran operator (super/finance/support/ops). Hanya super operator. */
+    public function role(Request $request, User $user)
+    {
+        abort_unless($request->user()->adminRole() === 'super', 403, 'Hanya super operator yang dapat mengubah peran.');
+        abort_unless($user->is_platform_admin, 422, 'Pengguna bukan operator.');
+        $role = $request->validate(['role' => ['required', 'in:'.implode(',', array_keys(config('admin.roles')))]])['role'];
+
+        if ($user->adminRole() === 'super' && $role !== 'super'
+            && User::where('is_platform_admin', true)->where(fn ($q) => $q->whereNull('admin_role')->orWhere('admin_role', 'super'))->count() <= 1) {
+            return back()->with('error', 'Minimal satu super operator harus tersisa.');
+        }
+        $user->forceFill(['admin_role' => $role === 'super' ? null : $role])->save();
+        AdminAudit::record('admin.role_set', 'user', (string) $user->id, null, ['email' => $user->email, 'role' => $role]);
+
+        return back()->with('success', "Peran operator diubah menjadi {$role}.");
+    }
+
     public function toggleAdmin(Request $request, User $user)
     {
+        abort_unless($request->user()->adminRole() === 'super', 403, 'Hanya super operator yang dapat memberi atau mencabut akses operator.');
         if ($user->is_platform_admin) {
             if ($user->id === $request->user()->id) {
                 return back()->with('error', 'Anda tidak dapat mencabut akses operator Anda sendiri.');

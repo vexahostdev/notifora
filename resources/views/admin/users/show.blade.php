@@ -39,6 +39,18 @@
     <section class="card card-pad">
       <h2 class="font-semibold text-white mb-2">Operator platform</h2>
       <p class="hint mb-3">{{ $u->isPlatformAdmin() ? 'Pengguna ini adalah operator platform.' : 'Beri akses penuh ke panel /admin (wajib 2FA).' }}</p>
+      @if ($u->isPlatformAdmin() && auth()->user()->adminRole() === 'super')
+        <form method="POST" action="{{ route('admin.users.role', $u) }}" class="mb-3">@csrf @method('PUT')
+          <label class="label" for="role">Peran operator</label>
+          <div class="flex gap-2">
+            <select id="role" name="role" class="input">@foreach (config('admin.roles') as $k => $r)<option value="{{ $k }}" @selected($u->adminRole() === $k)>{{ $r['label'] }}</option>@endforeach</select>
+            <button class="btn-secondary">Simpan</button>
+          </div>
+          <p class="hint mt-1">Super: semua bagian · Finance: pembayaran, plan, laporan · Support: tenant, pengguna, email · Operasional: ops &amp; sistem.</p>
+        </form>
+      @elseif ($u->isPlatformAdmin())
+        <p class="hint mb-3">Peran: <strong>{{ config('admin.roles.'.$u->adminRole().'.label') }}</strong></p>
+      @endif
       <form method="POST" action="{{ route('admin.users.toggle-admin', $u) }}" onsubmit="return confirm('{{ $u->isPlatformAdmin() ? 'Cabut' : 'Beri' }} akses operator?')">@csrf
         <button class="{{ $u->isPlatformAdmin() ? 'btn-danger' : 'btn-primary' }} w-full">{{ $u->isPlatformAdmin() ? 'Cabut akses operator' : 'Jadikan operator' }}</button></form>
     </section>

@@ -15,6 +15,15 @@ return [
         'password' => env('ADMIN_PASSWORD'),
     ],
 
+    // Peran operator → bagian panel yang boleh dibuka. Operator tanpa peran = super.
+    // Bagian = segmen nama rute setelah "admin." (system = workers, kesiapan, backup, log, branding, SMTP, pengaturan).
+    'roles' => [
+        'super' => ['label' => 'Super operator', 'can' => ['*']],
+        'finance' => ['label' => 'Finance', 'can' => ['payments', 'plans', 'reports', 'tenants']],
+        'support' => ['label' => 'Support', 'can' => ['tenants', 'users', 'abuse', 'comms', 'emails', 'audit']],
+        'ops' => ['label' => 'Operasional', 'can' => ['ops', 'system', 'abuse', 'audit']],
+    ],
+
     'flags' => [
         'signup_enabled' => 'Pendaftaran akun baru dibuka',
         'checkout_enabled' => 'Checkout & pembelian plan dibuka',
@@ -46,6 +55,7 @@ return [
         'plan-granted' => 'Plan diberikan operator',
         'broadcast' => 'Broadcast operator',
         'smtp-test' => 'Tes SMTP',
+        'ops-alert' => 'Peringatan operasional',
     ],
 
     // Email keamanan/transaksional inti: tidak boleh dimatikan lewat template

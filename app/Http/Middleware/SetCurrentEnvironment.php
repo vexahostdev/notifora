@@ -5,6 +5,7 @@ namespace App\Http\Middleware;
 use App\Enums\EnvironmentType;
 use App\Models\Announcement;
 use App\Models\Environment;
+use App\Services\WorkspaceProvisioner;
 use Closure;
 use Illuminate\Http\Request;
 
@@ -22,11 +23,12 @@ class SetCurrentEnvironment
         }
 
         $membership = $user?->currentMembership();
+        if (! $membership && $user?->isPlatformAdmin()) {
+            // Operator platform juga pengguna biasa: siapkan workspace pribadi saat pertama membuka Console
+            app(WorkspaceProvisioner::class)->create($user, $user->name.' Workspace');
+            $membership = $user->fresh()->currentMembership();
+        }
         if (! $membership) {
-            // Operator platform tanpa workspace diarahkan ke panel admin
-            if ($user?->isPlatformAdmin()) {
-                return redirect()->route('admin.dashboard');
-            }
             auth()->logout();
 
             return redirect()->route('login')->withErrors(['email' => 'Akun belum terhubung ke workspace.']);

@@ -13,7 +13,7 @@
 
 <form method="GET" class="flex flex-wrap gap-2 mb-4">
   <input name="q" value="{{ request('q') }}" placeholder="Penerima atau subjek" class="input max-w-xs" aria-label="Cari">
-  <select name="status" class="input w-auto" aria-label="Status" onchange="this.form.submit()"><option value="">Semua status</option>@foreach (['queued', 'sent', 'failed', 'skipped'] as $s)<option value="{{ $s }}" @selected(request('status') === $s)>{{ $s }}</option>@endforeach</select>
+  <select name="status" class="input w-auto" aria-label="Status" onchange="this.form.submit()"><option value="">Semua status</option>@foreach (['queued', 'sent', 'logged', 'failed', 'skipped'] as $s)<option value="{{ $s }}" @selected(request('status') === $s)>{{ $s }}</option>@endforeach</select>
   <select name="kind" class="input w-auto" aria-label="Jenis" onchange="this.form.submit()"><option value="">Semua jenis</option>@foreach ($kinds as $k => $l)<option value="{{ $k }}" @selected(request('kind') === $k)>{{ $l }}</option>@endforeach</select>
   <button class="btn-secondary">Cari</button>
 </form>

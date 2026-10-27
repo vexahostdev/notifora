@@ -470,3 +470,7 @@ Semua AC §6 lulus di Pest/Playwright; load test 500 trigger/dtk stabil 10 menit
 4. Jangan pernah menaruh secret di repo, log, atau response. Jangan memakai `eval`/Blade `compileString` untuk template user.
 5. Panggilan provider hanya di dalam job queue; controller hanya enqueue.
 6. Jika spesifikasi ambigu, cek Decision Log (§13), lalu tanyakan ke maintainer sebelum berasumsi.
+
+
+#### M13 — tambahan operasional (diimplementasikan)
+Menu Sistem di panel admin: Workers & scheduler (supervisor bawaan `notifora:supervise`, watchdog email), Kesiapan production, Backup database, Log aplikasi, Branding & kontak, SMTP & uji kirim, serta peran operator (super/finance/support/ops). Hanya operator platform; tidak mengubah fitur pengguna. Rincian: `docs/ADMIN.md`.

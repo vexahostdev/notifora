@@ -17,7 +17,7 @@ RUN composer install --no-dev --no-scripts --no-interaction --prefer-dist --opti
 
 # --- Runtime: php-fpm + nginx + supervisor --------------------------------
 FROM php:8.2-fpm-alpine AS app
-RUN apk add --no-cache nginx supervisor icu-dev oniguruma-dev libzip-dev \
+RUN apk add --no-cache nginx supervisor mariadb-client icu-dev oniguruma-dev libzip-dev \
  && docker-php-ext-install pdo_mysql intl mbstring zip pcntl opcache bcmath
 WORKDIR /var/www/html
 

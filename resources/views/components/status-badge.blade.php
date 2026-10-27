@@ -5,7 +5,7 @@ $map = [
   'QUEUED' => ['zinc', 'Queued'], 'PENDING' => ['zinc', 'Pending'],
   'PROCESSING' => ['blue', 'Processing'], 'WAITING' => ['blue', 'Waiting'],
   'SENT' => ['indigo', 'Sent'], 'DELIVERED' => ['emerald', 'Delivered'], 'READ' => ['emerald', 'Read ✓✓'],
-  'COMPLETED' => ['emerald', 'Completed'], 'PAID' => ['emerald', 'Lunas'], 'REFUNDED' => ['zinc', 'Dikembalikan'], 'sent' => ['emerald', 'Terkirim'], 'queued' => ['zinc', 'Antre'], 'skipped' => ['amber', 'Dilewati'], 'EXPIRED' => ['amber', 'Kedaluwarsa'], 'ACTIVE' => ['emerald', 'Active'], 'success' => ['emerald', 'Success'], 'active' => ['emerald', 'Active'],
+  'COMPLETED' => ['emerald', 'Completed'], 'PAID' => ['emerald', 'Lunas'], 'REFUNDED' => ['zinc', 'Dikembalikan'], 'sent' => ['emerald', 'Terkirim'], 'queued' => ['zinc', 'Antre'], 'skipped' => ['amber', 'Dilewati'], 'logged' => ['amber', 'Hanya log'], 'EXPIRED' => ['amber', 'Kedaluwarsa'], 'ACTIVE' => ['emerald', 'Active'], 'success' => ['emerald', 'Success'], 'active' => ['emerald', 'Active'],
   'PARTIAL' => ['amber', 'Partial'], 'SKIPPED' => ['amber', 'Skipped'], 'DRAFT' => ['zinc', 'Draft'], 'pending' => ['amber', 'Pending'],
   'FAILED' => ['red', 'Failed'], 'failed' => ['red', 'Failed'], 'CANCELED' => ['zinc', 'Canceled'], 'ARCHIVED' => ['zinc', 'Archived'], 'disabled' => ['red', 'Disabled'], 'degraded' => ['amber', 'Degraded'],
 ];

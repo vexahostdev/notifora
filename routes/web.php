@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\PlanController;
 use App\Http\Controllers\Admin\ReportController;
 use App\Http\Controllers\Admin\SearchController;
 use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
+use App\Http\Controllers\Admin\SystemController;
 use App\Http\Controllers\Admin\TenantController;
 use App\Http\Controllers\Admin\UserController;
 use App\Http\Controllers\Api\XenditCallbackController;
@@ -100,6 +101,7 @@ Route::middleware(['auth', 'platform.admin', 'throttle:240,1'])->prefix('admin')
     Route::post('/users/{user}/reset-2fa', [UserController::class, 'reset2fa'])->name('users.reset-2fa');
     Route::post('/users/{user}/send-reset', [UserController::class, 'sendReset'])->name('users.send-reset');
     Route::post('/users/{user}/toggle-admin', [UserController::class, 'toggleAdmin'])->name('users.toggle-admin');
+    Route::put('/users/{user}/role', [UserController::class, 'role'])->name('users.role');
 
     // Pembayaran, plan, kupon
     Route::get('/payments', [AdminPaymentController::class, 'index'])->name('payments.index');
@@ -148,6 +150,25 @@ Route::middleware(['auth', 'platform.admin', 'throttle:240,1'])->prefix('admin')
     Route::get('/emails/templates', [EmailController::class, 'templates'])->name('emails.templates');
     Route::put('/emails/templates/{kind}', [EmailController::class, 'templateUpdate'])->name('emails.template-update');
     Route::post('/emails/test', [EmailController::class, 'test'])->name('emails.test');
+    Route::get('/emails/smtp', [EmailController::class, 'smtp'])->name('emails.smtp');
+    Route::put('/emails/smtp', [EmailController::class, 'smtpUpdate'])->name('emails.smtp-update');
+    Route::post('/emails/smtp/probe', [EmailController::class, 'smtpProbe'])->name('emails.smtp-probe');
+
+    // Sistem: workers, kesiapan, backup, log, branding
+    Route::get('/system/workers', [SystemController::class, 'workers'])->name('system.workers');
+    Route::post('/system/workers/restart', [SystemController::class, 'restartWorkers'])->name('system.workers.restart');
+    Route::post('/system/workers/drain', [SystemController::class, 'drain'])->name('system.workers.drain');
+    Route::post('/system/workers/schedule', [SystemController::class, 'runSchedule'])->name('system.workers.schedule');
+    Route::post('/system/tools/{tool}', [SystemController::class, 'tool'])->name('system.tool');
+    Route::get('/system/readiness', [SystemController::class, 'readiness'])->name('system.readiness');
+    Route::get('/system/backups', [SystemController::class, 'backups'])->name('system.backups');
+    Route::post('/system/backups', [SystemController::class, 'backupRun'])->name('system.backups.run');
+    Route::get('/system/backups/{name}', [SystemController::class, 'backupDownload'])->name('system.backups.download');
+    Route::delete('/system/backups/{name}', [SystemController::class, 'backupDestroy'])->name('system.backups.destroy');
+    Route::get('/system/logs', [SystemController::class, 'logs'])->name('system.logs');
+    Route::get('/system/logs/download', [SystemController::class, 'logDownload'])->name('system.logs.download');
+    Route::get('/system/branding', [SystemController::class, 'branding'])->name('system.branding');
+    Route::put('/system/branding', [SystemController::class, 'brandingUpdate'])->name('system.branding.update');
 
     // Laporan & pengaturan
     Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');

@@ -13,6 +13,9 @@ x-app: &app
   depends_on:
     notifora-mysql: { condition: service_healthy }
     notifora-redis: { condition: service_healthy }
+  # storage/app dipakai bersama: unggahan (logo), backup database (dibuat scheduler, diunduh dari web)
+  volumes:
+    - app-storage:/var/www/html/storage/app
   restart: unless-stopped
 
 services:
@@ -94,5 +97,6 @@ services:
     restart: unless-stopped
 
 volumes:
+  app-storage:
   mysql-data:
   redis-data:

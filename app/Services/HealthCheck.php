@@ -66,7 +66,7 @@ class HealthCheck
             if (in_array($mailer, ['log', 'array'], true)) {
                 return ['warn', "mailer '$mailer' — email tidak dikirim sungguhan"];
             }
-            $cfg = config("mail.mailers.$mailer");
+            $cfg = config('mail.mailers.'.($mailer === 'failover' ? (config('mail.mailers.stalwart.username') ? 'stalwart' : 'smtp') : $mailer));
             $filled = ! empty($cfg['username'] ?? null) && ! empty($cfg['password'] ?? null);
 
             return [$filled ? 'ok' : 'fail', ($cfg['host'] ?? '?').':'.($cfg['port'] ?? '?').($filled ? ' · kredensial terisi' : ' · KREDENSIAL KOSONG')];

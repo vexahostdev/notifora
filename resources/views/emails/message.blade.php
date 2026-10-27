@@ -6,7 +6,7 @@
     'danger' => ['#B91C1C', '#FEF2F2'],
   ];
   [$accent, $soft] = $tones[$p['tone']] ?? $tones['info'];
-  $logo = rtrim(config('app.url'), '/').'/logo-sm.png';
+  $logo = \App\Services\Brand::logoUrl();
 @endphp
 <!DOCTYPE html>
 <html lang="id">
@@ -26,7 +26,7 @@
         <tr><td style="padding:0 4px 14px 4px;">
           <table role="presentation" cellpadding="0" cellspacing="0"><tr>
             <td style="vertical-align:middle;"><img src="{{ $logo }}" width="30" height="30" alt="" style="display:block;border:0;"></td>
-            <td style="vertical-align:middle;padding-left:10px;font-weight:800;letter-spacing:.08em;font-size:14px;color:#0D0D0D;">NOTIFORA</td>
+            <td style="vertical-align:middle;padding-left:10px;font-weight:800;letter-spacing:.08em;font-size:14px;color:#0D0D0D;text-transform:uppercase;">{{ \App\Services\Brand::name() }}</td>
           </tr></table>
         </td></tr>
         <tr><td style="background:#FFFFFF;border:2px solid #0D0D0D;box-shadow:6px 6px 0 {{ $accent }};padding:28px 26px;">
