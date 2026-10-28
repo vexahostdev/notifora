@@ -336,6 +336,47 @@ it('closes signup via the platform flag', function () {
     expect(User::where('email', 'new@ok.test')->exists())->toBeFalse();
 });
 
+it('toggles signup lock from admin panel and updates register view', function () {
+    PlatformSettings::setBool('signup_enabled', true);
+    // Guest visits /register -> sees form
+    $this->get('/register')->assertOk()->assertSee('Create account');
+
+    // Admin locks signup
+    asAdmin();
+    $this->post('/admin/settings/toggle-signup')->assertSessionHas('success');
+    expect(PlatformSettings::bool('signup_enabled'))->toBeFalse();
+
+    // Guest visits /register -> sees locked notice
+    auth()->logout();
+    $this->get('/register')->assertOk()->assertSee('PENDAFTARAN SEDANG DITUTUP');
+
+    // Admin unlocks signup
+    asAdmin();
+    $this->post('/admin/settings/toggle-signup')->assertSessionHas('success');
+    expect(PlatformSettings::bool('signup_enabled'))->toBeTrue();
+
+    // Guest visits /register -> sees form again
+    auth()->logout();
+    $this->get('/register')->assertOk()->assertSee('Create account');
+});
+
+it('locks and unlocks signup via artisan command', function () {
+    $this->artisan('notifora:signup', ['action' => 'lock', '--message' => 'Tahap pengujian lokal'])
+        ->assertSuccessful()
+        ->expectsOutputToContain('DIKUNCI');
+    expect(PlatformSettings::bool('signup_enabled'))->toBeFalse()
+        ->and(PlatformSettings::get('signup_lock_message'))->toBe('Tahap pengujian lokal');
+
+    $this->artisan('notifora:signup', ['action' => 'status'])
+        ->assertSuccessful()
+        ->expectsOutputToContain('TERKUNCI');
+
+    $this->artisan('notifora:signup', ['action' => 'unlock'])
+        ->assertSuccessful()
+        ->expectsOutputToContain('DIBUKA');
+    expect(PlatformSettings::bool('signup_enabled'))->toBeTrue();
+});
+
 it('serves 503 in maintenance mode but keeps operators in', function () {
     asAdmin();
     $this->put('/admin/settings', ['signup_enabled' => '1', 'checkout_enabled' => '1', 'maintenance' => '1', 'maintenance_message' => 'Upgrade DB'])->assertSessionHasNoErrors();

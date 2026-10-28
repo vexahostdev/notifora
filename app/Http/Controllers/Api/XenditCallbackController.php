@@ -76,7 +76,11 @@ class XenditCallbackController extends Controller
             ]);
         } catch (UniqueConstraintViolationException) {
             $event = PaymentEvent::where('provider', 'xendit')->where('event_id', $eventId)->first();
-            if ($event && $event->processing_status === 'processed') {
+            if (! $event) {
+                // Baris duplikat belum terlihat (transaksi lain belum commit): minta pengirim mencoba lagi.
+                return response()->json(['status' => 'error', 'message' => 'Concurrent callback, retry later.'], 503);
+            }
+            if ($event->processing_status === 'processed') {
                 return response()->json(['status' => 'already_processed', 'message' => 'Duplicate callback.']);
             }
         }

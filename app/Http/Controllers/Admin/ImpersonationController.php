@@ -21,6 +21,7 @@ class ImpersonationController extends Controller
 
         $request->session()->forget(['impersonator_id', 'environment_id']);
         auth()->login($admin);
+        $request->session()->regenerate(); // naik kembali ke hak operator: ganti ID sesi
 
         return redirect()->route('admin.tenants.index')->with('success', 'Impersonasi selesai.');
     }

@@ -11,7 +11,7 @@
     <div class="grid sm:grid-cols-2 gap-4">
       <div><label class="label" for="name">Nama</label><input id="name" name="name" required class="input" value="{{ old('name', $provider->name ?? \App\Models\ChannelProvider::providerFor($channel)) }}">@error('name')<p class="error-text">{{ $message }}</p>@enderror</div>
       <div><label class="label" for="status">Status</label>
-        <select id="status" name="status" class="input"><option value="active" @selected(($provider->status ?? 'active') !== 'disabled')>Active</option><option value="disabled" @selected(($provider->status ?? '') === 'disabled')>Disabled</option></select></div>
+        <select id="status" name="status" class="input"><option value="active" @selected(old('status', $provider->status ?? 'active') !== 'disabled')>Active</option><option value="disabled" @selected(old('status', $provider->status ?? '') === 'disabled')>Disabled</option></select></div>
     </div>
     @foreach ($fields as $key => $label)
       @php $masked = $provider?->maskedCredentials()[$key] ?? null; $secret = preg_match('/key|token|secret|password/i', $key); @endphp

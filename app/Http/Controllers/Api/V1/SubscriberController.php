@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Exceptions\ApiException;
 use App\Http\Controllers\Controller;
 use App\Models\MessageLog;
 use App\Models\Subscriber;
@@ -13,6 +14,10 @@ class SubscriberController extends Controller
 {
     public function upsert(Request $request, string $externalId, SubscriberService $service)
     {
+        if (mb_strlen($externalId) > 191) {
+            throw new ApiException('validation_failed', 'subscriberId maksimal 191 karakter.', 422);
+        }
+
         $data = $request->validate([
             'email' => ['nullable', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:32'],

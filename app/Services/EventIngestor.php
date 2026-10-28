@@ -62,9 +62,17 @@ class EventIngestor
                     'dry_run' => $dryRun,
                 ]);
             });
-        } catch (UniqueConstraintViolationException) {
+        } catch (UniqueConstraintViolationException $e) {
             // Balapan idempotency: event sudah dibuat request lain.
-            return NotificationEvent::where('idempotency_key', $idempotencyKey)->firstOrFail();
+            if ($idempotencyKey !== null) {
+                $existing = NotificationEvent::where('idempotency_key', $idempotencyKey)->first();
+                if ($existing) {
+                    return $existing;
+                }
+            }
+
+            // Pelanggaran unik lain (bukan idempotency) tidak boleh ditelan diam-diam.
+            throw $e;
         }
 
         $this->usage->incrementEvent($env);

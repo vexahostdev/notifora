@@ -21,8 +21,17 @@ Alpine.data('sprayCanvas', () => ({
   init() {
     const c = this.$refs.canvas;
     const fit = () => {
-      c.width = window.innerWidth;
-      c.height = document.documentElement.scrollHeight;
+      const width = window.innerWidth;
+      const height = document.documentElement.scrollHeight;
+      if (c.width === width && c.height === height) return;
+
+      const snapshot = document.createElement('canvas');
+      snapshot.width = c.width;
+      snapshot.height = c.height;
+      snapshot.getContext('2d').drawImage(c, 0, 0);
+      c.width = width;
+      c.height = height;
+      c.getContext('2d').drawImage(snapshot, 0, 0);
     };
     fit();
     window.addEventListener('resize', fit);

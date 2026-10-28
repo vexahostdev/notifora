@@ -9,29 +9,32 @@
   @vite(['resources/css/app.css', 'resources/js/docs.js'])
   @include('partials.brand-head')
 </head>
-<body x-data="docsApp({ searchUrl: @js(route('docs.search')), slug: @js($slug ?? null) })" @keydown.window="onKey($event)" class="min-h-screen">
+<body x-data="docsApp({ searchUrl: @js(route('docs.search')), slug: @js($slug ?? null) })"
+      @keydown.window="onKey($event)"
+      @resize.window="desktop = window.innerWidth >= 1024; if (desktop) nav = false"
+      class="min-h-screen">
 @php $sections = config('docs.sections'); @endphp
 
 {{-- Bar atas --}}
 <header class="sticky top-0 z-40 border-b border-line bg-surface/90 backdrop-blur">
-  <div class="mx-auto max-w-[1400px] px-4 sm:px-6 h-14 flex items-center gap-4">
-    <button class="lg:hidden btn-ghost btn-sm" @click="nav = true" aria-label="Buka menu dokumentasi"><x-icon name="menu" class="w-5 h-5" /></button>
+  <div class="mx-auto max-w-[1400px] px-2 sm:px-6 h-14 flex items-center gap-1.5 sm:gap-4">
+    <button x-ref="navTrigger" class="lg:hidden btn-ghost btn-sm shrink-0" @click="openNav()" aria-label="Buka menu dokumentasi" aria-controls="docs-nav" :aria-expanded="nav"><x-icon name="menu" class="w-5 h-5" /></button>
     <a href="{{ route('landing') }}" class="flex items-center gap-2 shrink-0">
       <img src="{{ \App\Services\Brand::logoUrl() }}" alt="" width="26" height="26" class="w-[26px] h-[26px] bg-[#fff] rounded p-px">
-      <span class="font-extrabold tracking-[.08em] text-white text-sm uppercase">{{ \App\Services\Brand::name() }}</span>
+      <span class="hidden sm:inline font-extrabold tracking-[.08em] text-white text-sm uppercase">{{ \App\Services\Brand::name() }}</span>
     </a>
     <nav class="hidden md:flex items-center gap-1 ml-4 text-sm" aria-label="Utama">
       <a href="{{ route('landing') }}" class="px-3 py-1.5 rounded-md text-zinc-400 hover:text-white hover:bg-white/5">Beranda</a>
-      <a href="{{ route('docs.index') }}" class="px-3 py-1.5 rounded-md text-white bg-white/5">Docs</a>
+      <a href="{{ route('docs.index') }}" class="px-3 py-1.5 rounded-md text-white bg-white/5" aria-current="page">Docs</a>
       <a href="{{ route('landing') }}#pricing" class="px-3 py-1.5 rounded-md text-zinc-400 hover:text-white hover:bg-white/5">Harga</a>
     </nav>
-    <div class="ml-auto flex items-center gap-2">
+    <div class="ml-auto flex items-center gap-0.5 sm:gap-2 shrink-0">
       <x-theme-toggle />
       @auth
         <a href="{{ route('console.dashboard') }}" class="btn-primary btn-sm">Console →</a>
       @else
-        <a href="{{ route('login') }}" class="hidden sm:inline-flex btn-ghost btn-sm">Masuk</a>
-        <a href="{{ route('register') }}" class="btn-primary btn-sm">Daftar gratis</a>
+        <a href="{{ route('login') }}" class="btn-ghost btn-sm">Masuk</a>
+        <a href="{{ route('register') }}" class="btn-primary btn-sm">Daftar<span class="hidden sm:inline"> gratis</span></a>
       @endauth
     </div>
   </div>
@@ -51,12 +54,19 @@
 
 <div class="mx-auto max-w-[1400px] px-4 sm:px-6 flex gap-8">
   {{-- Overlay mobile --}}
-  <div x-show="nav" x-cloak @click="nav = false" class="fixed inset-0 z-40 bg-black/60 lg:hidden"></div>
+  <div x-show="nav" x-cloak @click="closeNav()" class="fixed inset-0 z-40 bg-black/60 lg:hidden"></div>
 
   {{-- Sidebar --}}
-  <aside :class="nav ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
-         class="fixed lg:sticky top-0 lg:top-[6.5rem] z-50 lg:z-0 left-0 h-screen lg:h-[calc(100vh-7.5rem)] w-72 lg:w-64 shrink-0 overflow-y-auto bg-surface lg:bg-transparent border-r lg:border-0 border-line p-4 lg:p-0 lg:py-6 transition-transform" aria-label="Navigasi dokumentasi">
-    <div class="lg:hidden flex items-center justify-between mb-3"><span class="text-sm font-semibold text-white">Dokumentasi</span><button class="btn-ghost btn-sm" @click="nav = false" aria-label="Tutup menu"><x-icon name="x" /></button></div>
+  <aside id="docs-nav"
+         :class="nav ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
+         :inert="!desktop && !nav"
+         x-trap.noscroll="!desktop && nav"
+         class="fixed lg:sticky top-0 lg:top-[6.5rem] z-50 lg:z-0 left-0 h-dvh lg:h-[calc(100vh-7.5rem)] w-72 max-w-[85vw] lg:w-64 shrink-0 overflow-y-auto bg-surface lg:bg-transparent border-r lg:border-0 border-line p-4 lg:p-0 lg:py-6 -translate-x-full lg:translate-x-0 transition-transform" aria-label="Navigasi dokumentasi">
+    <div class="lg:hidden flex items-center justify-between mb-3"><span class="text-sm font-semibold text-white">Dokumentasi</span><button x-ref="navClose" class="btn-ghost btn-sm" @click="closeNav()" aria-label="Tutup menu"><x-icon name="x" /></button></div>
+    <nav class="lg:hidden flex gap-2 mb-4" aria-label="Utama mobile">
+      <a href="{{ route('landing') }}" class="btn-secondary btn-sm flex-1">Beranda</a>
+      <a href="{{ route('landing') }}#pricing" class="btn-secondary btn-sm flex-1">Harga</a>
+    </nav>
     <nav class="space-y-1">
       @foreach ($sections as $sSlug => $s)
         @php $isCurrent = ($slug ?? null) === $sSlug; @endphp
@@ -88,35 +98,43 @@
 
     <footer class="mt-14 pt-6 border-t border-line text-xs text-zinc-500 flex flex-wrap items-center justify-between gap-3">
       <span>Notifora Engineering Knowledge Base · Terakhir diperbarui: {{ config('docs.updated') }} · Rilis {{ config('docs.version') }}</span>
-      <a href="#" class="hover:text-white" @click.prevent="window.scrollTo({ top: 0, behavior: 'smooth' })">Kembali ke atas ↑</a>
+      <a href="#" class="hover:text-white" @click.prevent="scrollTop()">Kembali ke atas ↑</a>
     </footer>
     <p class="mt-4 text-center text-[11px] text-zinc-600">@include('partials.credit')</p>
   </main>
 </div>
 
 {{-- Modal pencarian (Ctrl+K) --}}
-<div x-show="searchOpen" x-cloak class="fixed inset-0 z-[60] flex items-start justify-center p-4 pt-[10vh]" role="dialog" aria-modal="true" aria-label="Pencarian dokumentasi">
+<div x-show="searchOpen" x-cloak class="fixed inset-0 z-[60] flex items-start justify-center p-4 pt-[6vh] sm:pt-[10vh]" role="dialog" aria-modal="true" aria-label="Pencarian dokumentasi">
   <div class="absolute inset-0 bg-black/70" @click="closeSearch()"></div>
-  <div class="relative w-full max-w-xl card shadow-2xl" x-trap.noscroll="searchOpen">
-    <div class="flex items-center gap-2 border-b border-line px-3">
-      <x-icon name="filter" class="w-4 h-4 text-zinc-500" />
+  <div class="relative w-full max-w-xl max-h-[88dvh] card shadow-2xl flex flex-col" x-trap.noscroll="searchOpen">
+    <div class="flex items-center gap-2 border-b border-line px-3 shrink-0">
+      <x-icon name="filter" class="w-4 h-4 text-zinc-500 shrink-0" />
       <input x-ref="q" x-model="query" @input="search()" @keydown.arrow-down.prevent="move(1)" @keydown.arrow-up.prevent="move(-1)" @keydown.enter.prevent="go()" @keydown.escape="closeSearch()"
-             type="search" placeholder="Cari: trigger, idempotency, webhook, checkout…" class="w-full bg-transparent py-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none" aria-label="Kata kunci">
-      <kbd class="font-mono text-[10px] border border-line rounded px-1.5 py-0.5 text-zinc-500">ESC</kbd>
+             type="search" placeholder="Cari dokumentasi…" class="w-full min-w-0 bg-transparent py-3 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none" aria-label="Kata kunci" role="combobox" aria-autocomplete="list" aria-controls="docs-results" :aria-expanded="searchOpen" :aria-activedescendant="results.length ? 'docs-result-' + active : null">
+      <kbd class="hidden sm:inline font-mono text-[10px] border border-line rounded px-1.5 py-0.5 text-zinc-500">ESC</kbd>
+      <button type="button" class="sm:hidden btn-ghost btn-sm shrink-0" @click="closeSearch()" aria-label="Tutup pencarian"><x-icon name="x" /></button>
     </div>
-    <ul class="max-h-[50vh] overflow-y-auto p-2" role="listbox">
+    <ul id="docs-results" class="overflow-y-auto p-2" role="listbox" x-show="results.length">
       <template x-for="(r, i) in results" :key="r.url">
-        <li role="option" :aria-selected="i === active">
-          <a :href="r.url" @mouseenter="active = i" @click="closeSearch()" :class="i === active ? 'bg-cobalt/15' : ''" class="block rounded-md px-3 py-2">
+        <li :id="'docs-result-' + i" role="option" :aria-selected="i === active">
+          <a :href="r.url" @mouseenter="active = i" @focus="active = i" @click="closeSearch()" :class="i === active ? 'bg-cobalt/15' : ''" class="block rounded-md px-3 py-2">
             <span class="block text-[10px] font-mono uppercase tracking-wider text-zinc-500" x-text="r.section"></span>
             <span class="block text-sm font-medium text-white" x-text="r.title"></span>
             <span class="block text-xs text-zinc-400 mt-0.5 line-clamp-2" x-html="r.snippet"></span>
           </a>
         </li>
       </template>
-      <li x-show="query && !results.length" class="px-3 py-6 text-center text-sm text-zinc-500">Tidak ada hasil untuk “<span x-text="query"></span>”.</li>
-      <li x-show="!query" class="px-3 py-6 text-center text-sm text-zinc-500">Ketik untuk mencari di seluruh dokumentasi.</li>
     </ul>
+    <div x-show="!results.length" class="px-3 py-6 text-center text-sm text-zinc-500" aria-live="polite">
+      <p x-show="searchLoading">Memuat indeks pencarian…</p>
+      <div x-show="searchError && !searchLoading" x-cloak>
+        <p class="text-err">Pencarian belum dapat dimuat.</p>
+        <button type="button" class="btn-secondary btn-sm mt-3" @click="loadSearch()">Coba lagi</button>
+      </div>
+      <p x-show="!searchLoading && !searchError && query && !results.length">Tidak ada hasil untuk “<span x-text="query"></span>”.</p>
+      <p x-show="!searchLoading && !searchError && !query">Ketik untuk mencari di seluruh dokumentasi.</p>
+    </div>
   </div>
 </div>
 </body>

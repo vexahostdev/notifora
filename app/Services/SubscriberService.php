@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Subscriber;
 use App\Support\Phone;
+use Illuminate\Database\UniqueConstraintViolationException;
 
 class SubscriberService
 {
@@ -18,7 +19,22 @@ class SubscriberService
         $externalId = (string) $to['subscriberId'];
 
         $subscriber = Subscriber::firstOrNew(['external_id' => $externalId]);
+        $this->apply($subscriber, $to);
 
+        try {
+            $subscriber->save();
+        } catch (UniqueConstraintViolationException) {
+            // Dua request paralel membuat subscriber yang sama: muat baris pemenang lalu terapkan ulang.
+            $subscriber = Subscriber::where('external_id', $externalId)->firstOrFail();
+            $this->apply($subscriber, $to);
+            $subscriber->save();
+        }
+
+        return $subscriber;
+    }
+
+    private function apply(Subscriber $subscriber, array $to): void
+    {
         $map = [
             'email' => $to['email'] ?? null,
             'phone' => array_key_exists('phone', $to) ? Phone::normalize($to['phone']) : null,
@@ -36,8 +52,5 @@ class SubscriberService
         if (isset($to['data']) && is_array($to['data'])) {
             $subscriber->data = [...($subscriber->data ?? []), ...$to['data']];
         }
-        $subscriber->save();
-
-        return $subscriber;
     }
 }

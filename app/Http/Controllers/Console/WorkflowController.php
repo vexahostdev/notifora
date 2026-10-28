@@ -73,7 +73,7 @@ class WorkflowController extends Controller
             'priority' => ['required', Rule::in(['NORMAL', 'HIGH'])],
             'is_critical' => ['boolean'],
             'steps' => ['present', 'array', "max:$max"],
-            'steps.*.uid' => ['required', 'string', 'max:64'],
+            'steps.*.uid' => ['required', 'string', 'max:64', 'distinct'],
             'steps.*.type' => ['required', Rule::enum(StepType::class)],
             'steps.*.name' => ['required', 'string', 'max:120'],
             'steps.*.channel' => ['nullable', Rule::enum(ChannelType::class)],

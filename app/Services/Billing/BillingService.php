@@ -4,6 +4,7 @@ namespace App\Services\Billing;
 
 use App\Exceptions\ApiException;
 use App\Models\AuditLog;
+use App\Models\Coupon;
 use App\Models\Payment;
 use App\Models\User;
 use App\Models\Workspace;
@@ -11,6 +12,7 @@ use App\Services\CouponService;
 use App\Services\Payments\XenditService;
 use App\Services\PlanCatalog;
 use App\Services\SystemNotifier;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -88,21 +90,8 @@ class BillingService
         }
         $amount = max(0, $subtotal - $discount);
 
-        $number = Payment::nextNumber();
-        $payment = Payment::create([
-            'number' => $number,
-            'workspace_id' => $ws->id,
-            'user_id' => $user->id,
-            'plan' => $plan,
-            'months' => $months,
-            'subtotal' => $subtotal,
-            'discount' => $discount,
-            'coupon_code' => $coupon?->code,
-            'amount' => $amount,
-            'status' => Payment::PENDING,
-            'external_id' => $number.'-'.Str::upper(Str::random(4)),  // prefix "NTF-" = routing di VexaHost
-            'expires_at' => now()->addSeconds((int) config('notifora.billing.invoice_ttl')),
-        ]);
+        $payment = $this->createPaymentRecord($ws, $user, $plan, $months, $subtotal, $discount, $coupon, $amount);
+        $number = $payment->number;
         if ($coupon) {
             app(CouponService::class)->redeem($coupon, $payment, $ws);
         }
@@ -124,6 +113,37 @@ class BillingService
         $this->notifier->invoiceCreated($ws, $payment->fresh(), $user);
 
         return $payment->fresh();
+    }
+
+    /**
+     * Nomor invoice berurutan dihitung dari baris terakhir; dua checkout paralel bisa memilih nomor yang
+     * sama. Unique index menangkapnya, lalu kita ulangi dengan nomor baru.
+     */
+    private function createPaymentRecord(Workspace $ws, User $user, string $plan, int $months, int $subtotal, int $discount, ?Coupon $coupon, int $amount): Payment
+    {
+        for ($attempt = 1; ; $attempt++) {
+            $number = Payment::nextNumber();
+            try {
+                return Payment::create([
+                    'number' => $number,
+                    'workspace_id' => $ws->id,
+                    'user_id' => $user->id,
+                    'plan' => $plan,
+                    'months' => $months,
+                    'subtotal' => $subtotal,
+                    'discount' => $discount,
+                    'coupon_code' => $coupon?->code,
+                    'amount' => $amount,
+                    'status' => Payment::PENDING,
+                    'external_id' => $number.'-'.Str::upper(Str::random(4)),  // prefix "NTF-" = routing di VexaHost
+                    'expires_at' => now()->addSeconds((int) config('notifora.billing.invoice_ttl')),
+                ]);
+            } catch (UniqueConstraintViolationException $e) {
+                if ($attempt >= 3) {
+                    throw $e;
+                }
+            }
+        }
     }
 
     /**
@@ -177,19 +197,26 @@ class BillingService
     /** EXPIRED / FAILED dari Xendit. Tidak mengubah payment yang sudah lunas. */
     public function markUnpaid(Payment $payment, string $status, string $reason): void
     {
-        if ($payment->status !== Payment::PENDING) {
+        // Update bersyarat agar balapan dengan webhook PAID tidak menimpa status lunas.
+        $updated = Payment::whereKey($payment->id)->where('status', Payment::PENDING)
+            ->update(['status' => $status, 'failure_reason' => $reason]);
+        if (! $updated) {
             return;
         }
-        $payment->update(['status' => $status, 'failure_reason' => $reason]);
-        $this->notifier->paymentFailed($payment->workspace, $payment->fresh());
+
+        $payment->refresh();
+        $this->notifier->paymentFailed($payment->workspace, $payment);
     }
 
     public function cancel(Payment $payment): void
     {
-        if ($payment->status === Payment::PENDING) {
-            $payment->update(['status' => Payment::CANCELED, 'failure_reason' => 'canceled_by_user']);
-            AuditLog::record($payment->workspace_id, 'billing.payment_canceled', 'payment', $payment->id, ['number' => $payment->number]);
+        $updated = Payment::whereKey($payment->id)->where('status', Payment::PENDING)
+            ->update(['status' => Payment::CANCELED, 'failure_reason' => 'canceled_by_user']);
+        if (! $updated) {
+            return;
         }
+
+        AuditLog::record($payment->workspace_id, 'billing.payment_canceled', 'payment', $payment->id, ['number' => $payment->number]);
     }
 
     /** Sinkronkan payment PENDING dengan Xendit (dipakai saat pengguna kembali dari halaman pembayaran). */

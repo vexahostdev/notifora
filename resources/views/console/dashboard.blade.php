@@ -30,13 +30,14 @@
       @endforeach
     </div>
     <span x-show="loading" x-cloak class="text-xs text-zinc-500">Memuat…</span>
+    <span x-show="error" x-cloak class="text-xs text-err text-right" role="alert" x-text="error"></span>
   </div>
 
-  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-    <div class="card card-pad"><p class="label">Total events</p><p class="text-2xl font-semibold text-white font-mono" x-text="data.kpi.events.toLocaleString('id-ID')">{{ number_format($data['kpi']['events'], 0, ',', '.') }}</p></div>
-    <div class="card card-pad"><p class="label">Delivery success</p><p class="text-2xl font-semibold text-white font-mono" x-text="data.kpi.success_rate === null ? '—' : data.kpi.success_rate + '%'">{{ $data['kpi']['success_rate'] === null ? '—' : $data['kpi']['success_rate'].'%' }}</p></div>
-    <div class="card card-pad"><p class="label">Avg latency (enqueue→sent)</p><p class="text-2xl font-semibold text-white font-mono" x-text="data.kpi.avg_latency_ms === null ? '—' : data.kpi.avg_latency_ms + ' ms'">{{ $data['kpi']['avg_latency_ms'] === null ? '—' : $data['kpi']['avg_latency_ms'].' ms' }}</p></div>
-    <div class="card card-pad"><p class="label">Failed</p><p class="text-2xl font-semibold font-mono" :class="data.kpi.failed ? 'text-err' : 'text-white'" x-text="data.kpi.failed.toLocaleString('id-ID')">{{ $data['kpi']['failed'] }}</p></div>
+  <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="card card-pad min-w-0"><p class="label">Total events</p><p class="text-xl sm:text-2xl font-semibold text-white font-mono break-words" x-text="data.kpi.events.toLocaleString('id-ID')">{{ number_format($data['kpi']['events'], 0, ',', '.') }}</p></div>
+    <div class="card card-pad min-w-0"><p class="label">Delivery success</p><p class="text-xl sm:text-2xl font-semibold text-white font-mono break-words" x-text="data.kpi.success_rate === null ? '—' : data.kpi.success_rate + '%'">{{ $data['kpi']['success_rate'] === null ? '—' : $data['kpi']['success_rate'].'%' }}</p></div>
+    <div class="card card-pad min-w-0"><p class="label">Avg latency (enqueue→sent)</p><p class="text-xl sm:text-2xl font-semibold text-white font-mono break-words" x-text="data.kpi.avg_latency_ms === null ? '—' : data.kpi.avg_latency_ms + ' ms'">{{ $data['kpi']['avg_latency_ms'] === null ? '—' : $data['kpi']['avg_latency_ms'].' ms' }}</p></div>
+    <div class="card card-pad min-w-0"><p class="label">Failed</p><p class="text-xl sm:text-2xl font-semibold font-mono break-words" :class="data.kpi.failed ? 'text-err' : 'text-white'" x-text="data.kpi.failed.toLocaleString('id-ID')">{{ $data['kpi']['failed'] }}</p></div>
   </div>
 
   <div class="grid lg:grid-cols-3 gap-4 mb-6">

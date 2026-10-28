@@ -12,19 +12,28 @@
 @endif
 
 <form method="POST" action="{{ route('console.billing.store') }}" class="grid lg:grid-cols-3 gap-5"
-      x-data="{ months: {{ $months }}, price: {{ $plan['price'] }}, base: {{ $baseTs }}, method: 'all',
-                coupon: @js(old('coupon', '')), discount: 0, couponMsg: '', couponOk: false, checking: false,
+      @submit="if (checking) { $event.preventDefault(); couponMsg = 'Tunggu pemeriksaan kupon selesai.'; } else if (submitting) { $event.preventDefault(); } else { submitting = true; }"
+      x-data="{ months: {{ (int) old('months', $months) }}, price: {{ $plan['price'] }}, base: {{ $baseTs }}, method: @js(old('method', 'all')),
+                coupon: @js(old('coupon', '')), discount: 0, couponMsg: '', couponOk: false, checking: false, submitting: false, couponRequest: 0,
+                invalidateCoupon() {
+                  this.couponRequest++;
+                  this.discount = 0; this.couponOk = false; this.couponMsg = ''; this.checking = false;
+                },
                 async applyCoupon() {
+                  const coupon = this.coupon.trim();
+                  const months = this.months;
+                  const request = ++this.couponRequest;
                   this.couponMsg = ''; this.discount = 0; this.couponOk = false;
-                  if (!this.coupon.trim()) return;
+                  if (!coupon) { this.checking = false; return; }
                   this.checking = true;
                   try {
-                    const r = await fetch('{{ route('console.billing.coupon-preview') }}', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content }, body: JSON.stringify({ plan: '{{ $planKey }}', months: this.months, coupon: this.coupon }) });
-                    const j = await r.json();
+                    const r = await fetch('{{ route('console.billing.coupon-preview') }}', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Accept': 'application/json', 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content }, body: JSON.stringify({ plan: '{{ $planKey }}', months, coupon }) });
+                    const j = await r.json().catch(() => ({}));
+                    if (request !== this.couponRequest) return;
                     if (r.ok) { this.discount = j.discount; this.couponOk = true; this.couponMsg = 'Kupon diterapkan: hemat ' + this.rp(j.discount); }
                     else { this.couponMsg = j.message || (j.errors ? Object.values(j.errors)[0][0] : 'Kupon tidak valid.'); }
-                  } catch (e) { this.couponMsg = 'Gagal memeriksa kupon.'; }
-                  this.checking = false;
+                  } catch (e) { if (request === this.couponRequest) this.couponMsg = 'Gagal memeriksa kupon.'; }
+                  finally { if (request === this.couponRequest) this.checking = false; }
                 },
                 get total() { return Math.max(0, this.price * this.months - this.discount) },
                 get until() { const d = new Date(this.base * 1000); d.setMonth(d.getMonth() + this.months);
@@ -39,7 +48,7 @@
       <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
         @foreach ($periods as $m)
           <label class="cursor-pointer">
-            <input type="radio" name="months" value="{{ $m }}" class="peer sr-only" x-model.number="months" @change="$nextTick(() => applyCoupon())" @checked($m === $months)>
+            <input type="radio" name="months" value="{{ $m }}" class="peer sr-only" x-model.number="months" @change="invalidateCoupon(); applyCoupon()" @checked((int) old('months', $months) === $m)>
             <span class="block rounded-md border border-line p-3 text-center peer-checked:border-cobalt peer-checked:bg-cobalt/10 peer-focus-visible:ring-2 ring-cobalt">
               <span class="block font-semibold text-white">{{ $m }} bulan</span>
               <span class="block text-xs font-mono text-zinc-400 mt-1">Rp {{ number_format($plan['price'] * $m, 0, ',', '.') }}</span>
@@ -55,7 +64,7 @@
       <div class="grid sm:grid-cols-2 gap-2">
         @foreach ($methods as $key => $m)
           <label class="cursor-pointer">
-            <input type="radio" name="method" value="{{ $key }}" class="peer sr-only" x-model="method" @checked($key === 'all')>
+            <input type="radio" name="method" value="{{ $key }}" class="peer sr-only" x-model="method" @checked(old('method', 'all') === $key)>
             <span class="block rounded-md border border-line px-3 py-2.5 text-sm peer-checked:border-cobalt peer-checked:bg-cobalt/10 peer-focus-visible:ring-2 ring-cobalt">{{ $m['label'] }}</span>
           </label>
         @endforeach
@@ -66,9 +75,9 @@
 
     <fieldset class="card card-pad">
       <legend class="font-semibold text-white mb-3">3. Kode kupon (opsional)</legend>
-      <div class="flex gap-2">
-        <input name="coupon" x-model="coupon" @keydown.enter.prevent="applyCoupon()" maxlength="40" class="input input-mono uppercase max-w-xs" placeholder="KODEKUPON" aria-label="Kode kupon" autocomplete="off">
-        <button type="button" class="btn-secondary" @click="applyCoupon()" :disabled="checking">Terapkan</button>
+      <div class="flex flex-col sm:flex-row gap-2">
+        <input name="coupon" x-model="coupon" @input="invalidateCoupon()" @keydown.enter.prevent="applyCoupon()" maxlength="40" class="input input-mono uppercase sm:max-w-xs" placeholder="KODEKUPON" aria-label="Kode kupon" autocomplete="off">
+        <button type="button" class="btn-secondary w-full sm:w-auto" @click="applyCoupon()" :disabled="checking"><span x-text="checking ? 'Memeriksa…' : 'Terapkan'">Terapkan</span></button>
       </div>
       <p class="text-sm mt-2" :class="couponOk ? 'text-ok' : 'text-err'" x-show="couponMsg" x-text="couponMsg" role="status"></p>
     </fieldset>
@@ -92,7 +101,7 @@
         <div class="flex justify-between"><dt class="text-zinc-400">{{ $renewing ? 'Berlaku sampai (setelah perpanjang)' : 'Aktif sampai' }}</dt><dd class="text-right text-white" x-text="until"></dd></div>
       </dl>
       <div class="border-t border-line pt-3 flex items-end justify-between"><span class="text-zinc-400 text-sm">Total</span><span class="font-mono text-2xl font-semibold text-white" x-text="rp(total)">Rp {{ number_format($plan['price'] * $months, 0, ',', '.') }}</span></div>
-      <button class="btn-primary w-full" @disabled($blocked || ! $configured)><x-icon name="card" /><span x-text="total === 0 ? 'Aktifkan gratis' : 'Bayar sekarang'">Bayar sekarang</span></button>
+      <button class="btn-primary w-full" :disabled="{{ $blocked || ! $configured ? 'true' : 'false' }} || checking || submitting"><x-icon name="card" /><span x-text="submitting ? 'Memproses…' : (total === 0 ? 'Aktifkan gratis' : 'Bayar sekarang')">Bayar sekarang</span></button>
       <p class="hint text-center">Dialihkan ke Xendit (QRIS, VA, Indomaret). Harga dalam Rupiah.</p>
     </div>
   </aside>

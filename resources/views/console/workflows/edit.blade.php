@@ -31,7 +31,7 @@
 
   <div class="grid lg:grid-cols-12 gap-5">
     {{-- Kolom kiri: pengaturan + daftar step --}}
-    <div class="lg:col-span-5 space-y-4">
+    <div class="lg:col-span-5 min-w-0 space-y-4">
       <section class="card card-pad grid sm:grid-cols-2 gap-3">
         <div class="sm:col-span-2"><label class="label" for="wf-name">Nama workflow</label><input id="wf-name" class="input" x-model="workflow.name" @disabled(! $canEdit)></div>
         <div><label class="label" for="wf-prio">Prioritas queue</label>
@@ -54,15 +54,15 @@
       @endif
 
       <ol class="space-y-0" aria-label="Urutan step">
-        <li class="flex items-center gap-2 px-3 py-2 text-xs font-mono"><span class="px-2 py-1 bg-cobalt text-[#fff] rounded font-bold">TRIGGER</span><span class="text-zinc-400">{{ $workflow->trigger_key }}</span></li>
+        <li class="flex items-center gap-2 px-3 py-2 text-xs font-mono min-w-0"><span class="px-2 py-1 bg-cobalt text-[#fff] rounded font-bold shrink-0">TRIGGER</span><span class="text-zinc-400 break-all">{{ $workflow->trigger_key }}</span></li>
         <template x-for="(step, i) in steps" :key="step.uid">
           <li class="relative pl-6">
             <span class="absolute left-2.5 top-0 bottom-0 w-px bg-line"></span>
-            <div @click="selected = step.uid" :class="selected === step.uid ? 'border-cobalt' : 'border-line hover:border-zinc-600'" class="card my-2 p-3 cursor-pointer border">
+            <div @click="selected = step.uid" @keydown.enter.self.prevent="selected = step.uid" @keydown.space.self.prevent="selected = step.uid" role="button" tabindex="0" :aria-pressed="selected === step.uid" :class="selected === step.uid ? 'border-cobalt' : 'border-line hover:border-zinc-600'" class="card my-2 p-3 cursor-pointer border">
               <div class="flex items-center gap-2">
                 <span class="text-xs font-mono text-zinc-500" x-text="'#' + (i + 1)"></span>
                 <span class="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border border-line" x-text="step.type === 'CHANNEL' ? step.channel : step.type"></span>
-                <span class="text-sm text-white font-medium truncate" x-text="step.name"></span>
+                <span class="text-sm text-white font-medium truncate min-w-0 flex-1" x-text="step.name"></span>
                 @if ($canEdit)
                 <span class="ml-auto flex items-center">
                   <button class="btn-ghost btn-sm" @click.stop="move(i,-1)" :disabled="i === 0" aria-label="Naik"><x-icon name="arrow-up" class="w-3.5 h-3.5" /></button>
@@ -81,7 +81,7 @@
     </div>
 
     {{-- Kolom kanan: pengaturan step --}}
-    <div class="lg:col-span-7">
+    <div class="lg:col-span-7 min-w-0">
       <template x-if="current">
         <section class="card card-pad space-y-4" :key="current.uid">
           <div class="grid sm:grid-cols-2 gap-3">
@@ -100,8 +100,8 @@
             <div>
               <label class="label" for="dl">Tunggu</label>
               <div class="flex gap-2 max-w-xs">
-                <input id="dl" type="number" min="1" class="input" x-model.number="delayValue" @disabled(! $canEdit)>
-                <select class="input w-auto" x-model="delayUnit" aria-label="Satuan"><option value="s">detik</option><option value="m">menit</option><option value="h">jam</option><option value="d">hari</option></select>
+                <input id="dl" type="number" min="0.0001" step="any" class="input" x-model.number="delayValue" @disabled(! $canEdit)>
+                <select class="input w-auto" x-model="delayUnit" aria-label="Satuan" @disabled(! $canEdit)><option value="s">detik</option><option value="m">menit</option><option value="h">jam</option><option value="d">hari</option></select>
               </div>
               <p class="hint">Maksimal 30 hari. Workflow berhenti sementara lalu dilanjutkan otomatis.</p>
             </div>
@@ -113,16 +113,16 @@
               <p class="hint">Jika semua rule (AND) tidak terpenuhi, sisa workflow dihentikan.</p>
               <template x-for="(r, ri) in current.config.rules" :key="ri">
                 <div class="flex flex-wrap gap-2 items-center">
-                  <input class="input input-mono flex-1 min-w-32" x-model="r.path" placeholder="payload.amount" aria-label="Path">
-                  <select class="input w-auto" x-model="r.op" aria-label="Operator">
+                  <input class="input input-mono flex-1 min-w-32" x-model="r.path" placeholder="payload.amount" aria-label="Path" @disabled(! $canEdit)>
+                  <select class="input w-auto" x-model="r.op" aria-label="Operator" @disabled(! $canEdit)>
                     <option value="eq">=</option><option value="neq">≠</option><option value="gt">&gt;</option><option value="gte">≥</option><option value="lt">&lt;</option><option value="lte">≤</option>
                     <option value="in">in (a,b)</option><option value="contains">contains</option><option value="exists">exists</option>
                   </select>
-                  <input class="input input-mono flex-1 min-w-24" x-model="r.value" placeholder="nilai" aria-label="Nilai" x-show="r.op !== 'exists'">
-                  <button class="btn-ghost btn-sm text-err" @click="removeRule(ri)" aria-label="Hapus rule"><x-icon name="x" /></button>
+                  <input class="input input-mono flex-1 min-w-24" x-model="r.value" placeholder="nilai" aria-label="Nilai" x-show="r.op !== 'exists'" @disabled(! $canEdit)>
+                  @if ($canEdit)<button class="btn-ghost btn-sm text-err" @click="removeRule(ri)" aria-label="Hapus rule"><x-icon name="x" /></button>@endif
                 </div>
               </template>
-              <button class="btn-secondary btn-sm" @click="addRule()">+ Rule</button>
+              @if ($canEdit)<button class="btn-secondary btn-sm" @click="addRule()">+ Rule</button>@endif
             </div>
           </template>
 
@@ -139,7 +139,7 @@
                 <textarea id="st-body" rows="7" class="input input-mono" x-model="current.template.body" @input="refreshPreview()" @disabled(! $canEdit)></textarea>
                 <div class="flex flex-wrap gap-1.5 mt-2">
                   <template x-for="v in ['@{{ subscriber.first_name }}', '@{{ subscriber.email }}', '@{{ payload.invoiceId }}', '@{{ event.id }}']" :key="v">
-                    <button type="button" class="btn-secondary btn-sm font-mono" @click="insertVar(v)" x-text="v"></button>
+                    <button type="button" class="btn-secondary btn-sm font-mono" @click="insertVar(v)" x-text="v" @disabled(! $canEdit)></button>
                   </template>
                 </div>
                 <p class="hint">Filter: <code>upper lower title trim default:"x" truncate:N currency:"IDR" number:N date:"d M Y" e json</code></p>
@@ -160,10 +160,10 @@
                 <p class="hint">Step fallback hanya berjalan bila step ini gagal permanen; tidak berjalan dalam alur normal.</p>
               </div>
 
-              <div class="rounded-md border border-line bg-surface p-3">
-                <div class="flex items-center justify-between mb-2"><p class="label !mb-0">Preview live</p>
-                  <details class="text-xs"><summary class="cursor-pointer text-zinc-400">Sample payload</summary>
-                    <textarea rows="5" class="input input-mono mt-2 w-72" x-model="samplePayload" @input="refreshPreview()" aria-label="Sample payload JSON"></textarea>
+              <div class="rounded-md border border-line bg-surface p-3 min-w-0">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-2"><p class="label !mb-0">Preview live</p>
+                  <details class="text-xs w-full sm:w-auto min-w-0 max-w-full"><summary class="cursor-pointer text-zinc-400">Sample payload</summary>
+                    <textarea rows="5" class="input input-mono mt-2 w-full sm:w-72 max-w-full" x-model="samplePayload" @input="refreshPreview()" aria-label="Sample payload JSON"></textarea>
                     <p class="error-text" x-text="samplePayloadError"></p></details></div>
                 <p class="text-sm font-semibold text-white" x-show="preview.subject" x-text="preview.subject"></p>
                 <pre class="whitespace-pre-wrap break-words text-sm text-zinc-200 font-sans" x-text="preview.output || '(kosong)'"></pre>

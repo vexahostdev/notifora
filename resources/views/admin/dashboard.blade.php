@@ -14,7 +14,7 @@
   </section>
 @endif
 
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+<div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
   <a href="{{ route('admin.tenants.index') }}" class="card card-pad hover:border-zinc-600"><p class="label">Workspace</p><p class="text-2xl font-semibold text-white font-mono">{{ number_format($kpi['workspaces']) }}</p><p class="hint">{{ $kpi['paid'] }} berbayar · <span class="{{ $kpi['suspended'] ? 'text-err' : '' }}">{{ $kpi['suspended'] }} ditangguhkan</span></p></a>
   <a href="{{ route('admin.users.index') }}" class="card card-pad hover:border-zinc-600"><p class="label">Pengguna</p><p class="text-2xl font-semibold text-white font-mono">{{ number_format($kpi['users']) }}</p><p class="hint">+{{ $kpi['new_users_7d'] }} 7 hari · {{ $kpi['admins'] }} operator</p></a>
   <div class="card card-pad"><p class="label">Event hari ini</p><p class="text-2xl font-semibold text-white font-mono">{{ number_format($kpi['events_today']) }}</p><p class="hint">{{ number_format($kpi['events_month']) }} bulan ini</p></div>

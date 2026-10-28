@@ -19,6 +19,7 @@ export const workflowEditor = ({ workflow, steps, providers, channels, saveUrl, 
   samplePayload: JSON.stringify(samplePayload, null, 2),
   samplePayloadError: '',
   _timer: null,
+  _previewRequest: 0,
 
   init() {
     window.addEventListener('beforeunload', (e) => {
@@ -91,10 +92,12 @@ export const workflowEditor = ({ workflow, steps, providers, channels, saveUrl, 
   delayUnit: 'm',
   get delayValue() {
     const s = this.current?.config?.seconds ?? 0;
-    return Math.round(s / { s: 1, m: 60, h: 3600, d: 86400 }[this.delayUnit]);
+    const value = s / { s: 1, m: 60, h: 3600, d: 86400 }[this.delayUnit];
+    return Number.isInteger(value) ? value : Number(value.toFixed(4));
   },
   set delayValue(v) {
-    this.current.config.seconds = Math.max(1, Math.round(Number(v) || 1) * { s: 1, m: 60, h: 3600, d: 86400 }[this.delayUnit]);
+    const factor = { s: 1, m: 60, h: 3600, d: 86400 }[this.delayUnit];
+    this.current.config.seconds = Math.max(1, Math.round((Number(v) || 1) * factor));
   },
 
   summary(step) {
@@ -122,6 +125,7 @@ export const workflowEditor = ({ workflow, steps, providers, channels, saveUrl, 
 
   refreshPreview() {
     clearTimeout(this._timer);
+    const request = ++this._previewRequest;
     this._timer = setTimeout(async () => {
       const step = this.current;
       const payload = this.payloadObject();
@@ -132,6 +136,7 @@ export const workflowEditor = ({ workflow, steps, providers, channels, saveUrl, 
           api(previewUrl, { method: 'POST', body: { template: step.template.body, payload, html: false } }),
           step.template.subject ? api(previewUrl, { method: 'POST', body: { template: step.template.subject, payload } }) : Promise.resolve({ output: '', errors: [] }),
         ]);
+        if (request !== this._previewRequest) return;
         this.preview = {
           subject: subject.output,
           output: body.output,

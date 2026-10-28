@@ -95,10 +95,11 @@ class TwoFactorController extends Controller
     {
         $user = $request->user();
         abort_if(config('admin.require_2fa') && $user->isPlatformAdmin(), 403, 'Operator platform tidak boleh menonaktifkan 2FA.');
-        $request->validate(['password' => ['required', 'current_password'], 'code' => ['required', 'string', 'max:32']]);
+        abort_unless($user->hasTwoFactor(), 404);
+        $request->validateWithBag('disable', ['password' => ['required', 'current_password'], 'code' => ['required', 'string', 'max:32']]);
 
         if (! $this->codeAccepted($user, (string) $request->input('code'), (string) $request->input('code'))) {
-            return back()->withErrors(['code' => 'Kode tidak valid.']);
+            return back()->withErrors(['code' => 'Kode tidak valid.'], 'disable');
         }
         $user->forceFill(['two_factor_secret' => null, 'two_factor_recovery_codes' => null, 'two_factor_confirmed_at' => null])->save();
 
@@ -109,7 +110,7 @@ class TwoFactorController extends Controller
     {
         $user = $request->user();
         abort_unless($user->hasTwoFactor(), 404);
-        $request->validate(['password' => ['required', 'current_password']]);
+        $request->validateWithBag('recovery', ['password' => ['required', 'current_password']]);
 
         $codes = $this->totp->recoveryCodes();
         $user->forceFill(['two_factor_recovery_codes' => $codes])->save();
@@ -136,11 +137,12 @@ class TwoFactorController extends Controller
         $code = trim($code);
         if ($code !== '' && preg_match('/^\d{6}$/', preg_replace('/\s+/', '', $code))) {
             $clean = preg_replace('/\s+/', '', $code);
-            if ($this->totp->verify($user->two_factor_secret, $clean) && Cache::add("totp:used:{$user->id}:$clean", 1, 120)) {
+            // 2FA bisa saja direset operator saat tantangan masih berjalan: jangan panggil verify(null).
+            if ($user->two_factor_secret !== null
+                && $this->totp->verify($user->two_factor_secret, $clean)
+                && Cache::add("totp:used:{$user->id}:$clean", 1, 120)) {
                 return true;
             }
-
-            return false;
         }
 
         $candidate = strtolower(trim($recovery !== '' ? $recovery : $code));

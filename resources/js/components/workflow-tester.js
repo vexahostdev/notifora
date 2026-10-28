@@ -23,7 +23,18 @@ export const workflowTester = ({ sendUrl, statusUrl, defaults }) => ({
     this.result = null;
     const to = this.parse(this.to, 'Penerima');
     const payload = this.parse(this.payload, 'Payload');
-    if (to === null || payload === null) return;
+    if (to === null || payload === null) {
+      if (!this.error) this.error = `${to === null ? 'Penerima' : 'Payload'}: harus berupa objek JSON`;
+      return;
+    }
+    if (typeof to !== 'object' || Array.isArray(to)) {
+      this.error = 'Penerima: harus berupa objek JSON';
+      return;
+    }
+    if (typeof payload !== 'object' || Array.isArray(payload)) {
+      this.error = 'Payload: harus berupa objek JSON';
+      return;
+    }
     if (this.real && !confirm('Pesan akan benar-benar dikirim lewat provider. Lanjutkan?')) return;
 
     this.sending = true;
@@ -31,7 +42,7 @@ export const workflowTester = ({ sendUrl, statusUrl, defaults }) => ({
       const { event_id } = await api(sendUrl, { method: 'POST', body: { to, payload, real: this.real } });
       await this.poll(event_id);
     } catch (e) {
-      this.error = e.data?.error ?? Object.values(e.data?.errors ?? {}).flat().join(' ') ?? e.message;
+      this.error = e.data?.error || Object.values(e.data?.errors ?? {}).flat().join(' ') || e.message || 'Simulasi gagal dijalankan.';
     } finally {
       this.sending = false;
     }
@@ -43,6 +54,7 @@ export const workflowTester = ({ sendUrl, statusUrl, defaults }) => ({
       if (this.result.final) return;
       await new Promise((r) => setTimeout(r, 1000));
     }
+    this.error = 'Workflow masih menunggu atau diproses setelah 30 detik. Muat ulang halaman untuk memeriksa status terbaru.';
   },
 
   badge(status) {

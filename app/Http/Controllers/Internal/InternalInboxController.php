@@ -27,6 +27,7 @@ class InternalInboxController extends Controller
             'env' => ['required', 'string'],
             'subscriber_id' => ['required', 'string'],
             'ids' => ['nullable', 'array', 'max:200'],
+            'ids.*' => ['string'],
             'all' => ['nullable', 'boolean'],
         ]);
 

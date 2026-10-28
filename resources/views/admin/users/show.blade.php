@@ -51,19 +51,23 @@
       @elseif ($u->isPlatformAdmin())
         <p class="hint mb-3">Peran: <strong>{{ config('admin.roles.'.$u->adminRole().'.label') }}</strong></p>
       @endif
-      <form method="POST" action="{{ route('admin.users.toggle-admin', $u) }}" onsubmit="return confirm('{{ $u->isPlatformAdmin() ? 'Cabut' : 'Beri' }} akses operator?')">@csrf
-        <button class="{{ $u->isPlatformAdmin() ? 'btn-danger' : 'btn-primary' }} w-full">{{ $u->isPlatformAdmin() ? 'Cabut akses operator' : 'Jadikan operator' }}</button></form>
-    </section>
-
-    <section class="card card-pad">
-      <h2 class="font-semibold text-white mb-2">{{ $u->isSuspended() ? 'Aktifkan akun' : 'Tangguhkan akun' }}</h2>
-      @if ($u->isSuspended())
-        <form method="POST" action="{{ route('admin.users.unsuspend', $u) }}">@csrf<button class="btn-primary w-full">Cabut penangguhan</button></form>
-      @else
-        <form method="POST" action="{{ route('admin.users.suspend', $u) }}" class="space-y-2" onsubmit="return confirm('Tangguhkan akun ini?')">@csrf
-          <input name="reason" required maxlength="255" class="input" placeholder="Alasan" aria-label="Alasan"><button class="btn-danger w-full">Tangguhkan</button></form>
+      @if (auth()->user()->adminRole() === 'super' && auth()->id() !== $u->id)
+        <form method="POST" action="{{ route('admin.users.toggle-admin', $u) }}" onsubmit="return confirm('{{ $u->isPlatformAdmin() ? 'Cabut' : 'Beri' }} akses operator?')">@csrf
+          <button class="{{ $u->isPlatformAdmin() ? 'btn-danger' : 'btn-primary' }} w-full">{{ $u->isPlatformAdmin() ? 'Cabut akses operator' : 'Jadikan operator' }}</button></form>
       @endif
     </section>
+
+    @if (auth()->id() !== $u->id)
+      <section class="card card-pad">
+        <h2 class="font-semibold text-white mb-2">{{ $u->isSuspended() ? 'Aktifkan akun' : 'Tangguhkan akun' }}</h2>
+        @if ($u->isSuspended())
+          <form method="POST" action="{{ route('admin.users.unsuspend', $u) }}">@csrf<button class="btn-primary w-full">Cabut penangguhan</button></form>
+        @else
+          <form method="POST" action="{{ route('admin.users.suspend', $u) }}" class="space-y-2" onsubmit="return confirm('Tangguhkan akun ini?')">@csrf
+            <input name="reason" required maxlength="255" class="input" placeholder="Alasan" aria-label="Alasan"><button class="btn-danger w-full">Tangguhkan</button></form>
+        @endif
+      </section>
+    @endif
   </aside>
 </div>
 @endsection

@@ -52,12 +52,18 @@ class CommsController extends Controller
     public function broadcasts(Request $request)
     {
         $audience = $request->query('audience', 'all');
+        $audience = array_key_exists($audience, Broadcast::audiences()) ? $audience : 'all';
+        $count = count(Broadcast::recipientsFor($audience));
+
+        if ($request->expectsJson()) {
+            return response()->json(['audience' => $audience, 'count' => $count]);
+        }
 
         return view('admin.comms.broadcasts', [
             'items' => Broadcast::with('creator:id,name')->latest()->limit(30)->get(),
             'audiences' => Broadcast::audiences(),
             'audience' => $audience,
-            'count' => count(Broadcast::recipientsFor(array_key_exists($audience, Broadcast::audiences()) ? $audience : 'all')),
+            'count' => $count,
         ]);
     }
 

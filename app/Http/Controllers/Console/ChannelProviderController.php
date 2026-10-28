@@ -21,7 +21,7 @@ class ChannelProviderController extends Controller
 
     public function edit(string $channel)
     {
-        $type = ChannelType::from($channel);
+        $type = $this->type($channel);
         abort_if($type === ChannelType::IN_APP, 404);
         $provider = ChannelProvider::where('channel', $type->value)->first();
 
@@ -35,7 +35,7 @@ class ChannelProviderController extends Controller
 
     public function update(Request $request, string $channel)
     {
-        $type = ChannelType::from($channel);
+        $type = $this->type($channel);
         abort_if($type === ChannelType::IN_APP, 404);
         $fields = ChannelProvider::schema(ChannelProvider::providerFor($type));
 
@@ -78,7 +78,7 @@ class ChannelProviderController extends Controller
     /** Test connection: kirim pesan uji nyata ke tujuan yang diisi pengguna. */
     public function test(Request $request, string $channel, ProviderFactory $factory)
     {
-        $type = ChannelType::from($channel);
+        $type = $this->type($channel);
         $provider = ChannelProvider::where('channel', $type->value)->firstOrFail();
         $data = $request->validate(['to' => ['required', 'string', 'max:191']]);
 
@@ -97,8 +97,14 @@ class ChannelProviderController extends Controller
 
     public function destroy(string $channel)
     {
-        ChannelProvider::where('channel', ChannelType::from($channel)->value)->delete();
+        ChannelProvider::where('channel', $this->type($channel)->value)->delete();
 
         return redirect()->route('console.channels.index')->with('success', 'Provider dihapus.');
+    }
+
+    /** Nama channel berasal dari URL: nilai tak dikenal harus 404, bukan ValueError/500. */
+    private function type(string $channel): ChannelType
+    {
+        return ChannelType::tryFrom($channel) ?? abort(404);
     }
 }

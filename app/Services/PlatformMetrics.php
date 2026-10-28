@@ -95,7 +95,7 @@ class PlatformMetrics
             $alerts[] = ['tone' => 'warn', 'text' => "$stale invoice melewati batas waktu belum disapu", 'url' => route('admin.payments.index', ['status' => 'PENDING'])];
         }
         if (! PlatformSettings::bool('signup_enabled')) {
-            $alerts[] = ['tone' => 'info', 'text' => 'Pendaftaran akun baru sedang ditutup', 'url' => route('admin.settings')];
+            $alerts[] = ['tone' => 'warn', 'text' => 'Pendaftaran akun baru sedang DIKUNCI (hanya via invite tim)', 'url' => route('admin.settings')];
         }
         if (PlatformSettings::bool('maintenance')) {
             $alerts[] = ['tone' => 'danger', 'text' => 'MODE MAINTENANCE AKTIF — pelanggan melihat halaman pemeliharaan', 'url' => route('admin.settings')];

@@ -6,8 +6,8 @@
   <form method="POST" action="{{ route('console.account.update') }}" class="card card-pad space-y-4">
     @csrf @method('PUT')
     <h2 class="font-semibold text-white">Profil</h2>
-    <div><label class="label" for="n">Nama</label><input id="n" name="name" required class="input" value="{{ old('name', auth()->user()->name) }}"></div>
-    <div><label class="label" for="e">Email</label><input id="e" name="email" type="email" required class="input" value="{{ old('email', auth()->user()->email) }}"></div>
+    <div><label class="label" for="n">Nama</label><input id="n" name="name" required class="input" value="{{ old('name', auth()->user()->name) }}">@error('name')<p class="error-text" role="alert">{{ $message }}</p>@enderror</div>
+    <div><label class="label" for="e">Email</label><input id="e" name="email" type="email" required class="input" value="{{ old('email', auth()->user()->email) }}">@error('email')<p class="error-text" role="alert">{{ $message }}</p>@enderror</div>
     <button class="btn-primary">Simpan</button>
   </form>
   <form method="POST" action="{{ route('console.account.password') }}" class="card card-pad space-y-4">

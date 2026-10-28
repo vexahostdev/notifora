@@ -42,6 +42,11 @@ class SetCurrentEnvironment
         $env = $envs->firstWhere('id', session('environment_id'))
             ?? $envs->firstWhere('type', EnvironmentType::DEVELOPMENT)
             ?? $envs->first();
+        if (! $env) {
+            auth()->logout();
+
+            return redirect()->route('login')->withErrors(['email' => 'Workspace belum memiliki environment. Hubungi '.config('notifora.support_email').'.']);
+        }
         session(['environment_id' => $env->id]);
         $env->setRelation('workspace', $membership->workspace);
 

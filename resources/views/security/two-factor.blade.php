@@ -31,7 +31,7 @@
     <h2 class="font-semibold text-white mb-2">Buat ulang kode pemulihan</h2>
     <form method="POST" action="{{ route('security.2fa.recovery') }}" class="flex flex-wrap items-end gap-3">
       @csrf
-      <div class="flex-1 min-w-48"><label class="label" for="rp">Password</label><input id="rp" name="password" type="password" required class="input" autocomplete="current-password">@error('password')<p class="error-text">{{ $message }}</p>@enderror</div>
+      <div class="flex-1 min-w-48"><label class="label" for="rp">Password</label><input id="rp" name="password" type="password" required class="input" autocomplete="current-password">@error('password', 'recovery')<p class="error-text" role="alert">{{ $message }}</p>@enderror</div>
       <button class="btn-secondary">Buat kode baru</button>
     </form>
   </section>
@@ -41,8 +41,8 @@
     <h2 class="font-semibold text-red-300 mb-2">Nonaktifkan 2FA</h2>
     <form method="POST" action="{{ route('security.2fa.disable') }}" class="grid sm:grid-cols-2 gap-3">
       @csrf @method('DELETE')
-      <div><label class="label" for="dp">Password</label><input id="dp" name="password" type="password" required class="input" autocomplete="current-password"></div>
-      <div><label class="label" for="dc">Kode 2FA / kode pemulihan</label><input id="dc" name="code" required class="input input-mono" autocomplete="one-time-code">@error('code')<p class="error-text">{{ $message }}</p>@enderror</div>
+      <div><label class="label" for="dp">Password</label><input id="dp" name="password" type="password" required class="input" autocomplete="current-password">@error('password', 'disable')<p class="error-text" role="alert">{{ $message }}</p>@enderror</div>
+      <div><label class="label" for="dc">Kode 2FA / kode pemulihan</label><input id="dc" name="code" required class="input input-mono" autocomplete="one-time-code">@error('code', 'disable')<p class="error-text" role="alert">{{ $message }}</p>@enderror</div>
       <div class="sm:col-span-2"><button class="btn-danger">Nonaktifkan</button></div>
     </form>
   </section>
@@ -55,15 +55,15 @@
       <li>Atau masukkan kunci manual di bawah.</li>
       <li>Masukkan kode 6 digit yang muncul untuk mengonfirmasi.</li>
     </ol>
-    <div class="flex flex-wrap items-start gap-6">
-      <canvas x-ref="canvas" class="rounded-md bg-[#fff] p-2 w-44 h-44" aria-label="Kode QR 2FA"></canvas>
-      <div class="min-w-0 flex-1">
+    <div class="flex flex-col sm:flex-row sm:items-start gap-6">
+      <canvas x-ref="canvas" class="rounded-md bg-[#fff] p-2 w-44 h-44 self-center sm:self-start" aria-label="Kode QR 2FA" role="img"></canvas>
+      <div class="min-w-0 w-full sm:flex-1">
         <p class="label">Kunci manual</p>
         <code class="code block break-all select-all">{{ $secret }}</code>
-        <form method="POST" action="{{ route('security.2fa.confirm') }}" class="mt-4 flex items-end gap-3">
+        <form method="POST" action="{{ route('security.2fa.confirm') }}" class="mt-4 flex flex-col sm:flex-row sm:items-end gap-3">
           @csrf
-          <div class="flex-1"><label class="label" for="c">Kode 6 digit</label><input id="c" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="7" required autofocus class="input input-mono tracking-widest">@error('code')<p class="error-text">{{ $message }}</p>@enderror</div>
-          <button class="btn-primary">Aktifkan</button>
+          <div class="flex-1 min-w-0"><label class="label" for="c">Kode 6 digit</label><input id="c" name="code" inputmode="numeric" autocomplete="one-time-code" maxlength="7" required autofocus class="input input-mono tracking-widest">@error('code')<p class="error-text">{{ $message }}</p>@enderror</div>
+          <button class="btn-primary w-full sm:w-auto">Aktifkan</button>
         </form>
       </div>
     </div>

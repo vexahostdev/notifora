@@ -71,12 +71,16 @@
   body { @apply bg-surface text-zinc-200 font-sans antialiased; }
   [x-cloak] { display: none !important; }
   :focus-visible { @apply outline-2 outline-offset-2 outline-cobalt; }
+  @media (prefers-reduced-motion: reduce) {
+    html { scroll-behavior: auto !important; }
+    *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+  }
 }
 
 @layer components {
   .card { @apply bg-surface-2 border border-line rounded-lg; }
   :root[data-theme="light"] .card { box-shadow: 0 1px 2px rgb(16 24 40 / 0.04); }
-  .card-pad { @apply p-5; }
+  .card-pad { @apply p-4 sm:p-5; }
   .label { @apply block text-xs font-medium text-zinc-400 mb-1.5; }
   .input { @apply w-full bg-surface border border-line rounded-md px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-cobalt focus:outline-none; }
   .input-mono { @apply font-mono text-xs; }

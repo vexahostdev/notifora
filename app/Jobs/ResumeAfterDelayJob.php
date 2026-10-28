@@ -32,6 +32,11 @@ class ResumeAfterDelayJob implements ShouldQueue
 
                 return;
             }
+            if ($step->execution->environment?->workspace?->isSuspended()) {
+                $engine->cancel($step->execution);
+
+                return;
+            }
             $step->update(['status' => StepStatus::COMPLETED, 'executed_at' => now()]);
             $engine->advance($step);
         });

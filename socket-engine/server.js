@@ -54,7 +54,7 @@ io.use((socket, next) => {
 
   try {
     const claims = jwt.verify(socket.handshake.auth?.token, SECRET, { algorithms: ['HS256'] });
-    if (!claims.sub || !claims.env) throw new Error('bad_claims');
+    if (!claims.sub || !claims.env || !Number.isFinite(claims.exp)) throw new Error('bad_claims');
     socket.data = { sub: claims.sub, env: claims.env, exp: claims.exp, ip };
     connectionsPerIp.set(ip, count + 1);
     next();

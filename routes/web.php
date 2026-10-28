@@ -175,6 +175,7 @@ Route::middleware(['auth', 'platform.admin', 'throttle:240,1'])->prefix('admin')
     Route::get('/reports/workspaces.csv', [ReportController::class, 'workspacesCsv'])->name('reports.workspaces-csv');
     Route::get('/settings', [AdminSettingsController::class, 'index'])->name('settings');
     Route::put('/settings', [AdminSettingsController::class, 'update'])->name('settings.update');
+    Route::post('/settings/toggle-signup', [AdminSettingsController::class, 'toggleSignup'])->name('settings.toggle-signup');
 });
 
 // --- Console ------------------------------------------------------------

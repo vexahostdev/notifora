@@ -7,7 +7,7 @@
   <a href="{{ route('admin.payments.export') }}" class="btn-secondary">Ekspor pembayaran (CSV)</a>
 </x-page-header>
 
-<div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+<div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
   <div class="card card-pad"><p class="label">MRR</p><p class="text-2xl font-mono font-semibold text-white">{{ $rp($mrr) }}</p></div>
   <div class="card card-pad"><p class="label">ARR (perkiraan)</p><p class="text-2xl font-mono font-semibold text-white">{{ $rp($arr) }}</p></div>
   <div class="card card-pad"><p class="label">Pendapatan 12 bln</p><p class="text-2xl font-mono font-semibold text-white">{{ $rp($revenue['total']) }}</p></div>

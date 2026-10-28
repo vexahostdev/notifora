@@ -4,7 +4,7 @@ import { api } from '../bootstrap';
 export const paymentStatus = ({ url, pending }) => ({
   pending,
   timer: null,
-  tries: 0,
+  checking: false,
 
   init() {
     if (!this.pending) return;
@@ -13,7 +13,8 @@ export const paymentStatus = ({ url, pending }) => ({
   },
 
   async check() {
-    if (document.hidden || this.tries++ > 450) return; // ~30 menit
+    if (document.hidden || this.checking) return;
+    this.checking = true;
     try {
       const r = await api(url);
       if (r.final) {
@@ -22,6 +23,8 @@ export const paymentStatus = ({ url, pending }) => ({
       }
     } catch {
       /* jaringan putus: coba lagi pada interval berikutnya */
+    } finally {
+      this.checking = false;
     }
   },
 });

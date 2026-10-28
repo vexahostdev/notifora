@@ -10,7 +10,11 @@
 
   <div class="grid grid-cols-2 gap-2 mb-7 p-1 bg-concrete-2 border-2 border-ink" role="tablist">
     <a href="{{ route('login') }}" class="py-2.5 text-center font-display text-xs sm:text-sm uppercase tracking-wider bg-ink text-white shadow-[2px_2px_0_#0033ff]" aria-current="page">Sign in</a>
-    <a href="{{ route('register') }}" class="py-2.5 text-center font-display text-xs sm:text-sm uppercase tracking-wider hover:bg-white/60">Register</a>
+    @if (\App\Services\PlatformSettings::bool('signup_enabled'))
+      <a href="{{ route('register') }}" class="py-2.5 text-center font-display text-xs sm:text-sm uppercase tracking-wider hover:bg-white/60">Register</a>
+    @else
+      <span class="py-2.5 text-center font-display text-xs sm:text-sm uppercase tracking-wider text-zinc-400 border border-dashed border-zinc-400 cursor-not-allowed" title="Pendaftaran akun baru ditutup sementara">Locked</span>
+    @endif
   </div>
 
   @if (session('status'))<p class="mb-4 font-mono text-[11px] text-cobalt font-bold" role="status">{{ session('status') }}</p>@endif

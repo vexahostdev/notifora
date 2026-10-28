@@ -5,6 +5,8 @@ export const dashboardCharts = ({ url, initial }) => ({
   range: initial.range,
   data: initial,
   loading: false,
+  error: '',
+  rangeRequest: 0,
   charts: {},
 
   async init() {
@@ -23,13 +25,22 @@ export const dashboardCharts = ({ url, initial }) => ({
   },
 
   async setRange(range) {
+    const request = ++this.rangeRequest;
     this.range = range;
     this.loading = true;
+    this.error = '';
     try {
-      this.data = await api(`${url}?range=${range}`);
+      const data = await api(`${url}?range=${range}`);
+      if (request !== this.rangeRequest) return;
+      this.data = data;
       this.draw();
+    } catch {
+      if (request === this.rangeRequest) {
+        this.range = this.data.range;
+        this.error = 'Data gagal dimuat. Silakan coba lagi.';
+      }
     } finally {
-      this.loading = false;
+      if (request === this.rangeRequest) this.loading = false;
     }
   },
 

@@ -60,8 +60,19 @@ class WorkflowPublisher
                 if ($sec < 1 || $sec > config('notifora.limits.max_delay_seconds')) {
                     $errors[] = "$label: delay harus 1 detik sampai 30 hari.";
                 }
-            } elseif ($s->type === StepType::FILTER && empty($s->config['rules'])) {
-                $errors[] = "$label: filter belum punya rule.";
+            } elseif ($s->type === StepType::FILTER) {
+                $rules = $s->config['rules'] ?? null;
+                if (! is_array($rules) || $rules === []) {
+                    $errors[] = "$label: filter belum punya rule.";
+                } else {
+                    foreach (array_values($rules) as $i => $rule) {
+                        $op = is_array($rule) ? ($rule['op'] ?? 'eq') : null;
+                        if (! is_array($rule) || ! is_string($rule['path'] ?? null)
+                            || ! in_array($op, ['eq', 'neq', 'gt', 'gte', 'lt', 'lte', 'in', 'contains', 'exists'], true)) {
+                            $errors[] = "$label: rule #".($i + 1).' tidak valid.';
+                        }
+                    }
+                }
             }
         }
 

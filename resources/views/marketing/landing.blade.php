@@ -9,7 +9,7 @@
   @vite(['resources/css/marketing.css', 'resources/js/marketing.js'])
   @include('partials.brand-head')
 </head>
-<body x-data="{ menu: false }">
+<body x-data="{ menu: false }" @keydown.escape.window="if (menu) { menu = false; $refs.menuTrigger?.focus(); }">
 {{-- Filter SVG dekoratif (nonaktif otomatis lewat reduced-motion tidak berlaku; filter statis) --}}
 <svg style="position:absolute;width:0;height:0" aria-hidden="true">
   <defs>
@@ -29,29 +29,53 @@
 </svg>
 
 <div x-data="sprayCanvas()" class="relative">
-  <canvas x-ref="canvas" @pointerdown="drawing = on; on && spray($event)" @pointermove="drawing && on && spray($event)" @pointerup="drawing = false"
+  <canvas x-ref="canvas" @pointerdown="drawing = on; on && spray($event)" @pointermove="drawing && on && spray($event)" @pointerup.window="drawing = false" @pointercancel="drawing = false" @lostpointercapture="drawing = false"
           :class="on ? 'pointer-events-auto cursor-crosshair' : 'pointer-events-none'" class="absolute inset-0 z-30" aria-hidden="true"></canvas>
 
   {{-- HEADER --}}
-  <header class="fixed top-0 inset-x-0 z-40 bg-concrete/80 backdrop-blur-md border-b border-ink/5 px-5 sm:px-9 md:px-12 py-3.5 flex items-center justify-between">
-    <a href="#overview" class="group flex items-center gap-2">
-      <img src="{{ \App\Services\Brand::logoUrl() }}" alt="" width="30" height="30" class="brand-logo w-[30px] h-[30px] transition-transform duration-300 group-hover:-rotate-6">
-      <span class="font-extrabold text-sm tracking-[.08em] uppercase">{{ \App\Services\Brand::name() }}</span>
+  <header class="fixed top-0 inset-x-0 z-40 bg-concrete/80 backdrop-blur-md border-b border-ink/5 px-4 sm:px-9 md:px-12 py-3.5 flex items-center justify-between gap-3" @click.outside="menu = false">
+    <a href="#overview" class="group flex items-center gap-2 min-w-0" @click="menu = false">
+      <img src="{{ \App\Services\Brand::logoUrl() }}" alt="" width="30" height="30" class="brand-logo w-[30px] h-[30px] shrink-0 transition-transform duration-300 group-hover:-rotate-6">
+      <span class="font-extrabold text-sm tracking-[.08em] uppercase truncate">{{ \App\Services\Brand::name() }}</span>
     </a>
     <nav class="hidden md:flex items-center gap-8" aria-label="Utama">
       @foreach (['overview' => 'OVERVIEW', 'channels' => 'CHANNELS', 'workflow' => 'WORKFLOW', 'docs' => 'DOCS', 'pricing' => 'PRICING'] as $id => $label)
         <a href="{{ $id === 'docs' ? url('/docs') : '#'.$id }}" class="text-[10.5px] font-extrabold tracking-[.14em] hover:text-cobalt transition-colors">{{ $label }}</a>
       @endforeach
     </nav>
-    <div class="flex items-center gap-4">
+    <div class="flex items-center gap-2 sm:gap-4 shrink-0">
       <x-theme-toggle class="p-1.5 border-2 border-ink/80 hover:bg-ink hover:text-white transition-colors" />
-      @auth
-        <a href="{{ route('console.dashboard') }}" class="text-[11px] font-extrabold tracking-[.12em] hover:text-cobalt">CONSOLE ↗</a>
-      @else
-        <a href="{{ route('login') }}" class="hidden sm:block text-[11px] font-extrabold tracking-[.12em] hover:text-cobalt">SIGN IN</a>
-        <a href="{{ route('register') }}" class="text-[11px] font-extrabold tracking-[.12em] hover:text-cobalt">GET API KEY ↗</a>
-      @endauth
+      <div class="hidden sm:flex items-center gap-4">
+        @auth
+          <a href="{{ route('console.dashboard') }}" class="text-[11px] font-extrabold tracking-[.12em] hover:text-cobalt">CONSOLE ↗</a>
+        @else
+          <a href="{{ route('login') }}" class="text-[11px] font-extrabold tracking-[.12em] hover:text-cobalt">SIGN IN</a>
+          @if (\App\Services\PlatformSettings::bool('signup_enabled'))
+            <a href="{{ route('register') }}" class="text-[11px] font-extrabold tracking-[.12em] hover:text-cobalt">GET API KEY ↗</a>
+          @else
+            <span class="text-[10px] font-mono font-bold px-2 py-1 border border-ink/40 text-zinc-500 uppercase tracking-wider" title="Pendaftaran akun baru ditutup sementara">PENDAFTARAN DITUTUP</span>
+          @endif
+        @endauth
+      </div>
+      <button x-ref="menuTrigger" type="button" class="md:hidden px-2.5 py-1.5 text-[10px] font-extrabold tracking-[.12em] border-2 border-ink/80 hover:bg-ink hover:text-white transition-colors" @click="menu = !menu" :aria-expanded="menu" aria-controls="mobile-menu" x-text="menu ? 'TUTUP' : 'MENU'">MENU</button>
     </div>
+    <nav id="mobile-menu" x-show="menu" x-cloak class="md:hidden absolute inset-x-4 top-[calc(100%+0.5rem)] rounded-md border-2 border-ink bg-paper p-3 shadow-brutal-ink" aria-label="Menu mobile">
+      <div class="grid grid-cols-2 gap-1">
+        @foreach (['overview' => 'OVERVIEW', 'channels' => 'CHANNELS', 'workflow' => 'WORKFLOW', 'docs' => 'DOCS', 'pricing' => 'PRICING'] as $id => $label)
+          <a href="{{ $id === 'docs' ? url('/docs') : '#'.$id }}" @click="menu = false" class="px-3 py-2.5 text-[11px] font-extrabold tracking-[.12em] hover:bg-concrete hover:text-cobalt">{{ $label }}</a>
+        @endforeach
+      </div>
+      <div class="sm:hidden mt-2 pt-2 border-t border-ink/15 flex flex-wrap gap-2">
+        @auth
+          <a href="{{ route('console.dashboard') }}" class="b-btn-alt flex-1">Console ↗</a>
+        @else
+          <a href="{{ route('login') }}" class="b-btn-alt flex-1">Sign in</a>
+          @if (\App\Services\PlatformSettings::bool('signup_enabled'))
+            <a href="{{ route('register') }}" class="b-btn-alt flex-1">Get API key ↗</a>
+          @endif
+        @endauth
+      </div>
+    </nav>
   </header>
 
   {{-- HERO --}}
@@ -180,7 +204,7 @@
     </div>
   </section>
 
-  <footer class="bg-[#0d0d0d] text-[#e3e7ee] px-5 sm:px-9 md:px-12 py-10">
+  <footer class="bg-[#0d0d0d] text-[#e3e7ee] px-5 sm:px-9 md:px-12 pt-10 pb-24 sm:py-10">
     <div class="max-w-[1300px] mx-auto flex flex-wrap items-center justify-between gap-4">
       <p class="font-mono text-xs flex items-center gap-2"><img src="{{ asset('logo-sm.png') }}" alt="" width="20" height="20" class="w-5 h-5 rounded-sm bg-white p-px">@include('partials.credit')</p>
       <p class="font-mono text-xs text-zinc-500"><a href="mailto:{{ \App\Services\Brand::supportEmail() }}" class="hover:text-cobalt">{{ \App\Services\Brand::supportEmail() }}</a> · <a href="{{ url('/docs') }}" class="hover:text-cobalt">Docs</a></p>

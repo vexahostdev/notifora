@@ -1,7 +1,23 @@
 @extends('layouts.admin')
 @section('title', 'Pengguna')
 @section('content')
-<x-page-header title="Pengguna & operator" subtitle="Semua akun terdaftar, termasuk operator platform." />
+<x-page-header title="Pengguna & operator" subtitle="Semua akun terdaftar, termasuk operator platform.">
+  <div class="flex items-center gap-2">
+    @if (\App\Services\PlatformSettings::bool('signup_enabled'))
+      <span class="text-xs font-mono font-bold px-2 py-1 rounded bg-emerald-500/10 text-emerald-300 border border-emerald-500/30">Pendaftaran: Terbuka</span>
+      <form method="POST" action="{{ route('admin.settings.toggle-signup') }}" class="inline">
+        @csrf
+        <button type="submit" class="btn-danger btn-sm" onclick="return confirm('Kunci pendaftaran akun baru sekarang?')">Kunci pendaftaran</button>
+      </form>
+    @else
+      <span class="text-xs font-mono font-bold px-2 py-1 rounded bg-amber-500/10 text-amber-300 border border-amber-500/30">Pendaftaran: Terkunci</span>
+      <form method="POST" action="{{ route('admin.settings.toggle-signup') }}" class="inline">
+        @csrf
+        <button type="submit" class="btn-primary btn-sm">Buka pendaftaran</button>
+      </form>
+    @endif
+  </div>
+</x-page-header>
 <form method="GET" class="flex flex-wrap gap-2 mb-4">
   <input name="q" value="{{ request('q') }}" placeholder="Nama atau email" class="input max-w-xs" aria-label="Cari">
   <select name="filter" class="input w-auto" aria-label="Filter" onchange="this.form.submit()">

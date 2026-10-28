@@ -42,12 +42,14 @@
             <td class="td">{{ $m->user->hasTwoFactor() ? '✓' : '—' }}</td>
             <td class="td text-right whitespace-nowrap">
               @unless ($m->user->isPlatformAdmin())
-              <form method="POST" action="{{ route('admin.tenants.impersonate', [$ws, $m->user]) }}" class="inline" onsubmit="return confirm('Masuk sebagai {{ $m->user->email }}? Aksi ini dicatat di audit.')">@csrf<button class="btn-secondary btn-sm">Impersonasi</button></form>
+              <form method="POST" action="{{ route('admin.tenants.impersonate', [$ws, $m->user]) }}" class="inline" onsubmit="return confirm(@js('Masuk sebagai '.$m->user->email.'? Aksi ini dicatat di audit.'))">@csrf<button class="btn-secondary btn-sm">Impersonasi</button></form>
               @endunless
               @if ($m->role !== \App\Enums\MemberRole::OWNER)
               <form method="POST" action="{{ route('admin.tenants.owner', [$ws, $m]) }}" class="inline" onsubmit="return confirm('Jadikan Owner? Owner lama diturunkan ke Admin.')">@csrf<button class="btn-ghost btn-sm">Jadikan owner</button></form>
               @endif
-              <form method="POST" action="{{ route('admin.tenants.member.remove', [$ws, $m]) }}" class="inline" onsubmit="return confirm('Hapus anggota ini dari workspace?')">@csrf @method('DELETE')<button class="btn-danger btn-sm">Hapus</button></form>
+              @if ($m->role !== \App\Enums\MemberRole::OWNER)
+                <form method="POST" action="{{ route('admin.tenants.member.remove', [$ws, $m]) }}" class="inline" onsubmit="return confirm('Hapus anggota ini dari workspace?')">@csrf @method('DELETE')<button class="btn-danger btn-sm">Hapus</button></form>
+              @endif
             </td>
           </tr>
         @endforeach

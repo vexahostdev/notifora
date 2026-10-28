@@ -73,6 +73,18 @@ class DispatchChannelStepJob implements ShouldBeUnique, ShouldQueue
             $event = $exec->event;
             $log = MessageLog::where('step_execution_id', $step->id)->firstOrFail();
 
+            // Workspace ditangguhkan saat job sudah di antrean: jangan kirim apa pun.
+            if ($exec->environment?->workspace?->isSuspended()) {
+                $step->update(['status' => StepStatus::SKIPPED, 'skip_reason' => 'workspace_suspended']);
+                $log->advanceStatus(MessageStatus::FAILED, [
+                    'error_code' => 'workspace_suspended',
+                    'error_message' => 'Workspace ditangguhkan sebelum pesan terkirim.',
+                ]);
+                $engine->cancel($exec);
+
+                return;
+            }
+
             $step->update(['status' => StepStatus::PROCESSING]);
 
             $provider = $factory->forStep($def, $event);

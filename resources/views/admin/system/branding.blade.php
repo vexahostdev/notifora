@@ -22,14 +22,14 @@
 
   <section class="card card-pad space-y-4">
     <h2 class="font-semibold text-white">Logo &amp; favicon</h2>
-    <div class="flex items-center gap-4">
+    <div class="flex flex-col sm:flex-row sm:items-center gap-4">
       <span class="w-14 h-14 rounded-md bg-[#fff] border border-line flex items-center justify-center p-1 shrink-0"><img src="{{ $logo }}" alt="Logo saat ini" class="max-w-full max-h-full"></span>
-      <div class="flex-1"><label class="label" for="brand_logo">Logo (PNG/JPG/WebP, maks. 1 MB, persegi)</label><input id="brand_logo" name="brand_logo" type="file" accept="image/png,image/jpeg,image/webp" class="input">@error('brand_logo')<p class="error-text">{{ $message }}</p>@enderror
+      <div class="flex-1 min-w-0 w-full"><label class="label" for="brand_logo">Logo (PNG/JPG/WebP, maks. 1 MB, persegi)</label><input id="brand_logo" name="brand_logo" type="file" accept="image/png,image/jpeg,image/webp" class="input">@error('brand_logo')<p class="error-text">{{ $message }}</p>@enderror
         @if (!empty($v['brand_logo_path']))<label class="flex items-center gap-2 mt-2 text-xs text-zinc-400"><input type="checkbox" name="remove_logo" value="1" class="accent-[#0033FF]"> Hapus logo kustom (kembali ke bawaan)</label>@endif</div>
     </div>
-    <div class="flex items-center gap-4">
+    <div class="flex flex-col sm:flex-row sm:items-center gap-4">
       <span class="w-14 h-14 rounded-md bg-surface border border-line flex items-center justify-center shrink-0"><img src="{{ $favicon }}" alt="Favicon saat ini" class="w-8 h-8"></span>
-      <div class="flex-1"><label class="label" for="brand_favicon">Favicon (PNG/ICO, maks. 256 KB)</label><input id="brand_favicon" name="brand_favicon" type="file" accept="image/png,image/x-icon" class="input">@error('brand_favicon')<p class="error-text">{{ $message }}</p>@enderror
+      <div class="flex-1 min-w-0 w-full"><label class="label" for="brand_favicon">Favicon (PNG/ICO, maks. 256 KB)</label><input id="brand_favicon" name="brand_favicon" type="file" accept="image/png,image/x-icon" class="input">@error('brand_favicon')<p class="error-text">{{ $message }}</p>@enderror
         @if (!empty($v['brand_favicon_path']))<label class="flex items-center gap-2 mt-2 text-xs text-zinc-400"><input type="checkbox" name="remove_favicon" value="1" class="accent-[#0033FF]"> Hapus favicon kustom</label>@endif</div>
     </div>
     <p class="hint">Logo kustom disajikan dari <code>storage/</code>; jalankan <code>php artisan storage:link</code> sekali di server.</p>

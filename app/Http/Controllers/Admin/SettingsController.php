@@ -35,11 +35,32 @@ class SettingsController extends Controller
             PlatformSettings::setBool($flag, $request->boolean($flag));
         }
         PlatformSettings::setBool('maintenance', $request->boolean('maintenance'));
-        PlatformSettings::set('maintenance_message', trim((string) $request->validate(['maintenance_message' => ['nullable', 'string', 'max:500']])['maintenance_message']));
+        $data = $request->validate([
+            'maintenance_message' => ['nullable', 'string', 'max:500'],
+            'signup_lock_message' => ['nullable', 'string', 'max:500'],
+        ]);
+        PlatformSettings::set('maintenance_message', trim((string) ($data['maintenance_message'] ?? '')));
+        PlatformSettings::set('signup_lock_message', trim((string) ($data['signup_lock_message'] ?? '')));
 
         $changed = collect(PlatformSettings::all())->filter(fn ($v, $k) => ($before[$k] ?? null) !== $v)->keys()->all();
         AdminAudit::record('settings.updated', 'settings', null, null, ['changed' => $changed, 'maintenance' => $request->boolean('maintenance')]);
 
         return back()->with('success', 'Pengaturan platform disimpan.');
+    }
+
+    public function toggleSignup(Request $request)
+    {
+        $new = ! PlatformSettings::bool('signup_enabled');
+        PlatformSettings::setBool('signup_enabled', $new);
+
+        AdminAudit::record('settings.signup_toggled', 'settings', null, null, [
+            'signup_enabled' => $new,
+        ]);
+
+        $msg = $new
+            ? 'Pendaftaran akun baru berhasil DIBUKA.'
+            : 'Pendaftaran akun baru berhasil DIKUNCI. User umum tidak dapat mendaftar.';
+
+        return back()->with('success', $msg);
     }
 }

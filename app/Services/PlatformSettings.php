@@ -14,6 +14,7 @@ class PlatformSettings
         'checkout_enabled' => '1',
         'maintenance' => '0',
         'maintenance_message' => '',
+        'signup_lock_message' => '',
     ];
 
     /** @return array<string,string> */

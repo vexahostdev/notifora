@@ -1,12 +1,12 @@
 @extends('layouts.app')
 @section('title', 'Message Logs')
 @section('content')
-<div x-data="{ auto: false, t: null }" x-init="$watch('auto', v => { clearInterval(t); if (v) t = setInterval(() => { if (!document.hidden) location.reload() }, 5000) })">
+<div x-data="{ auto: false, t: null }" x-init="$watch('auto', v => { clearInterval(t); if (v) t = setInterval(() => { const form = $refs.filters; const editing = form?.contains(document.activeElement) && ['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement.tagName); if (!document.hidden && !editing) location.reload() }, 5000) })">
 <x-page-header title="Message Logs" subtitle="Satu baris per pengiriman channel.">
   <label class="flex items-center gap-2 text-xs text-zinc-400"><input type="checkbox" x-model="auto" class="accent-[#0033FF]"> Auto-refresh 5 dtk</label>
 </x-page-header>
 
-<form method="GET" class="card card-pad grid sm:grid-cols-2 lg:grid-cols-6 gap-3 mb-4">
+<form method="GET" x-ref="filters" class="card card-pad grid sm:grid-cols-2 lg:grid-cols-6 gap-3 mb-4">
   <div class="lg:col-span-2"><label class="label" for="q">Cari</label><input id="q" name="q" value="{{ request('q') }}" class="input input-mono" placeholder="ID pesan / provider ID / tujuan"></div>
   <div><label class="label" for="status">Status</label><select id="status" name="status[]" class="input"><option value="">Semua</option>@foreach ($statuses as $s)<option value="{{ $s->value }}" @selected(in_array($s->value, (array) request('status')))>{{ $s->value }}</option>@endforeach</select></div>
   <div><label class="label" for="channel">Channel</label><select id="channel" name="channel" class="input"><option value="">Semua</option>@foreach ($channels as $c)<option value="{{ $c->value }}" @selected(request('channel') === $c->value)>{{ $c->label() }}</option>@endforeach</select></div>

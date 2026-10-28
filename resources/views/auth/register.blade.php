@@ -11,43 +11,59 @@
 
   @if (session('status'))<p class="mb-4 font-mono text-[11px] text-cobalt font-bold" role="status">{{ session('status') }}</p>@endif
 
-  <form method="POST" action="{{ route('register.attempt') }}" class="space-y-4">
-    @csrf
-    <div>
-      <label for="name" class="b-label">Developer name *</label>
-      <input id="name" name="name" required value="{{ old('name') }}" autocomplete="name" placeholder="Alex Vance" class="b-input">
-      @error('name')<p class="mt-1 font-mono text-[11px] text-red-600 font-bold">{{ $message }}</p>@enderror
-    </div>
-    @unless ($invite)
-    <div>
-      <label for="team" class="b-label">Organization / team (optional)</label>
-      <input id="team" name="team" value="{{ old('team') }}" placeholder="Acme Corp" class="b-input">
-    </div>
-    @endunless
-    <div>
-      <label for="email" class="b-label">Work email *</label>
-      <input id="email" name="email" type="email" required value="{{ old('email') }}" autocomplete="email" placeholder="dev@organization.io" class="b-input">
-      @error('email')<p class="mt-1 font-mono text-[11px] text-red-600 font-bold">{{ $message }}</p>@enderror
-    </div>
-    <div class="grid sm:grid-cols-2 gap-4">
-      <div>
-        <label for="password" class="b-label">Passphrase *</label>
-        <input id="password" name="password" type="password" required minlength="10" autocomplete="new-password" class="b-input">
-        @error('password')<p class="mt-1 font-mono text-[11px] text-red-600 font-bold">{{ $message }}</p>@enderror
+  @if (! empty($locked))
+    <div class="border-2 border-amber-600 bg-amber-500/10 p-5 sm:p-6 mb-2 text-ink">
+      <div class="flex items-center gap-2 mb-2">
+        <span class="inline-block w-2.5 h-2.5 bg-amber-600"></span>
+        <span class="font-mono text-[11px] font-black uppercase tracking-wider text-amber-700 dark:text-amber-400">PENDAFTARAN SEDANG DITUTUP</span>
       </div>
-      <div>
-        <label for="password_confirmation" class="b-label">Ulangi *</label>
-        <input id="password_confirmation" name="password_confirmation" type="password" required autocomplete="new-password" class="b-input">
+      <p class="text-xs sm:text-sm font-medium leading-relaxed mb-4 text-zinc-700 dark:text-zinc-300">
+        {{ $lockMessage }}
+      </p>
+      <div class="flex flex-wrap gap-2 pt-3 border-t border-amber-600/30">
+        <a href="{{ route('login') }}" class="b-btn text-xs py-2 px-4">Sudah punya akun? Sign in ↗</a>
+        <a href="{{ route('landing') }}" class="b-btn-alt text-xs py-2 px-4">Kembali ke Beranda</a>
       </div>
     </div>
-    <p class="font-mono text-[10px] text-zinc-600">Minimal 10 karakter, mengandung huruf dan angka.</p>
-    <label class="flex items-start gap-2 pt-1 font-mono text-[10px] leading-tight text-zinc-700">
-      <input type="checkbox" name="terms" value="1" required class="mt-0.5 accent-[#0033FF]">
-      <span>I agree to Notifora Developer Terms, plan-based rate limits, and zero-spam policy.</span>
-    </label>
-    @error('terms')<p class="font-mono text-[11px] text-red-600 font-bold">Anda harus menyetujui syarat.</p>@enderror
-    <button type="submit" class="b-btn w-full mt-2">Create account <span aria-hidden="true">↗</span></button>
-    <p class="font-mono text-[10px] text-zinc-600">Setelah daftar, API key dibuat di Console → Settings → API Keys.</p>
-  </form>
+  @else
+    <form method="POST" action="{{ route('register.attempt') }}" class="space-y-4">
+      @csrf
+      <div>
+        <label for="name" class="b-label">Developer name *</label>
+        <input id="name" name="name" required value="{{ old('name') }}" autocomplete="name" placeholder="Alex Vance" class="b-input">
+        @error('name')<p class="mt-1 font-mono text-[11px] text-red-600 font-bold">{{ $message }}</p>@enderror
+      </div>
+      @unless ($invite)
+      <div>
+        <label for="team" class="b-label">Organization / team (optional)</label>
+        <input id="team" name="team" value="{{ old('team') }}" placeholder="Acme Corp" class="b-input">
+      </div>
+      @endunless
+      <div>
+        <label for="email" class="b-label">Work email *</label>
+        <input id="email" name="email" type="email" required value="{{ old('email') }}" autocomplete="email" placeholder="dev@organization.io" class="b-input">
+        @error('email')<p class="mt-1 font-mono text-[11px] text-red-600 font-bold">{{ $message }}</p>@enderror
+      </div>
+      <div class="grid sm:grid-cols-2 gap-4">
+        <div>
+          <label for="password" class="b-label">Passphrase *</label>
+          <input id="password" name="password" type="password" required minlength="10" autocomplete="new-password" class="b-input">
+          @error('password')<p class="mt-1 font-mono text-[11px] text-red-600 font-bold">{{ $message }}</p>@enderror
+        </div>
+        <div>
+          <label for="password_confirmation" class="b-label">Ulangi *</label>
+          <input id="password_confirmation" name="password_confirmation" type="password" required autocomplete="new-password" class="b-input">
+        </div>
+      </div>
+      <p class="font-mono text-[10px] text-zinc-600">Minimal 10 karakter, mengandung huruf dan angka.</p>
+      <label class="flex items-start gap-2 pt-1 font-mono text-[10px] leading-tight text-zinc-700">
+        <input type="checkbox" name="terms" value="1" required class="mt-0.5 accent-[#0033FF]">
+        <span>I agree to Notifora Developer Terms, plan-based rate limits, and zero-spam policy.</span>
+      </label>
+      @error('terms')<p class="font-mono text-[11px] text-red-600 font-bold">Anda harus menyetujui syarat.</p>@enderror
+      <button type="submit" class="b-btn w-full mt-2">Create account <span aria-hidden="true">↗</span></button>
+      <p class="font-mono text-[10px] text-zinc-600">Setelah daftar, API key dibuat di Console → Settings → API Keys.</p>
+    </form>
+  @endif
 </div>
 @endsection

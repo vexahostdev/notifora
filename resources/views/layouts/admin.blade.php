@@ -10,7 +10,15 @@
   @vite(['resources/css/app.css', 'resources/js/app.js'])
   @include('partials.brand-head')
 </head>
-<body class="h-full" x-data="{ nav: false }">
+<body class="h-full"
+      x-data="{
+        nav: false,
+        desktop: window.innerWidth >= 1024,
+        openNav() { this.nav = true; this.$nextTick(() => this.$refs.navClose?.focus()); },
+        closeNav() { this.nav = false; this.$nextTick(() => this.$refs.navTrigger?.focus()); }
+      }"
+      @resize.window="desktop = window.innerWidth >= 1024; if (desktop) nav = false"
+      @keydown.escape.window="nav && closeNav()">
 @php
   $groups = [
     'Ringkasan' => [['admin.dashboard', 'Dashboard', 'home'], ['admin.reports.index', 'Laporan', 'chart']],
@@ -29,12 +37,17 @@
 <div class="{{ app()->isProduction() ? 'bg-err text-white' : 'bg-surface-2 text-zinc-400 border-b border-line' }} text-center text-[11px] font-mono font-bold py-1 tracking-wider">PLATFORM ADMIN — {{ strtoupper(app()->environment()) }} — semua tindakan dicatat di audit log</div>
 
 <div class="flex min-h-[calc(100%-1.5rem)]">
-  <div x-show="nav" x-cloak @click="nav = false" class="fixed inset-0 bg-black/60 z-30 lg:hidden"></div>
+  <div x-show="nav" x-cloak @click="closeNav()" class="fixed inset-0 bg-black/60 z-30 lg:hidden"></div>
 
-  <aside :class="nav ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'" class="fixed lg:sticky top-0 z-40 h-screen w-60 shrink-0 bg-surface-2 border-r border-line flex flex-col transition-transform">
+  <aside id="admin-nav"
+         :class="nav ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'"
+         :inert="!desktop && !nav"
+         x-trap.noscroll="!desktop && nav"
+         class="fixed lg:sticky top-0 z-40 h-dvh w-60 max-w-[85vw] shrink-0 bg-surface-2 border-r border-line flex flex-col -translate-x-full lg:translate-x-0 transition-transform">
     <div class="px-4 h-14 flex items-center gap-2 border-b border-line shrink-0">
       <span class="w-8 h-8 shrink-0 rounded-md bg-[#fff] border border-line flex items-center justify-center p-0.5"><img src="{{ \App\Services\Brand::logoUrl() }}" alt="" width="28" height="28" class="w-7 h-7"></span>
       <div class="leading-tight min-w-0"><span class="font-extrabold tracking-[.08em] text-white text-sm block uppercase truncate">{{ \App\Services\Brand::name() }}</span><span class="text-[9px] font-mono font-bold tracking-widest text-link">ADMIN</span></div>
+      <button type="button" x-ref="navClose" class="lg:hidden btn-ghost btn-sm ml-auto" @click="closeNav()" aria-label="Tutup menu"><x-icon name="x" /></button>
     </div>
     <nav class="flex-1 overflow-y-auto p-3 space-y-4" aria-label="Navigasi admin">
       @foreach ($groups as $label => $links)
@@ -57,15 +70,15 @@
   </aside>
 
   <div class="flex-1 min-w-0 flex flex-col">
-    <header class="h-14 border-b border-line bg-surface/80 backdrop-blur sticky top-0 z-20 flex items-center gap-3 px-4">
-      <button class="lg:hidden btn-ghost btn-sm" @click="nav = true" aria-label="Buka menu"><x-icon name="menu" class="w-5 h-5" /></button>
-      <form method="GET" action="{{ route('admin.search') }}" class="flex-1 max-w-xl" role="search">
+    <header class="h-14 border-b border-line bg-surface/80 backdrop-blur sticky top-0 z-20 flex items-center gap-1.5 sm:gap-3 px-2 sm:px-4">
+      <button x-ref="navTrigger" class="lg:hidden btn-ghost btn-sm shrink-0" @click="openNav()" aria-label="Buka menu" aria-controls="admin-nav" :aria-expanded="nav"><x-icon name="menu" class="w-5 h-5" /></button>
+      <form method="GET" action="{{ route('admin.search') }}" class="flex-1 min-w-0 max-w-xl" role="search">
         <label for="gs" class="sr-only">Cari</label>
-        <input id="gs" name="q" value="{{ request('q') }}" placeholder="Cari email, workspace, no. invoice, ID pesan…" class="input !py-1.5" autocomplete="off">
+        <input id="gs" name="q" value="{{ request('q') }}" placeholder="Cari email, workspace, invoice, ID pesan…" class="input !py-1.5 min-w-0" autocomplete="off">
       </form>
-      <div class="ml-auto flex items-center gap-2">
+      <div class="ml-auto flex items-center gap-0.5 sm:gap-2 shrink-0">
         <x-theme-toggle />
-        <form method="POST" action="{{ route('logout') }}">@csrf<button class="btn-ghost btn-sm" title="Keluar"><x-icon name="logout" /><span class="hidden sm:inline">Keluar</span></button></form>
+        <form method="POST" action="{{ route('logout') }}">@csrf<button class="btn-ghost btn-sm" title="Keluar" aria-label="Keluar"><x-icon name="logout" /><span class="hidden sm:inline">Keluar</span></button></form>
       </div>
     </header>
 
@@ -80,9 +93,9 @@
   </div>
 </div>
 
-<div class="fixed bottom-4 right-4 z-50 space-y-2" aria-live="polite">
+<div class="fixed bottom-4 inset-x-4 sm:left-auto sm:right-4 sm:max-w-sm z-50 space-y-2" aria-live="polite">
   <template x-for="t in $store.toast.items" :key="t.id">
-    <div class="card px-4 py-2.5 text-sm shadow-xl" :class="t.type === 'error' ? 'border-err/50 text-red-200' : 'border-ok/50 text-emerald-200'" x-text="t.message"></div>
+    <div class="card px-4 py-2.5 text-sm shadow-xl break-words" :class="t.type === 'error' ? 'border-err/50 text-red-200' : 'border-ok/50 text-emerald-200'" :role="t.type === 'error' ? 'alert' : 'status'" x-text="t.message"></div>
   </template>
 </div>
 @stack('scripts')

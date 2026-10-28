@@ -60,7 +60,16 @@ class AuthController extends Controller
 
     public function showRegister(Request $request)
     {
-        return view('auth.register', ['invite' => $request->session()->get('invite_token') ? true : false]);
+        $hasInvite = (bool) $request->session()->get('invite_token');
+        $locked = ! $hasInvite && ! PlatformSettings::bool('signup_enabled');
+        $lockMessage = PlatformSettings::get('signup_lock_message')
+            ?: 'Pendaftaran akun baru sedang ditutup sementara untuk pengujian dan pemeliharaan sistem. Hubungi '.config('notifora.support_email').'.';
+
+        return view('auth.register', [
+            'invite' => $hasInvite,
+            'locked' => $locked,
+            'lockMessage' => $lockMessage,
+        ]);
     }
 
     public function register(Request $request, WorkspaceProvisioner $provisioner, InvitationService $invites, SystemNotifier $notifier)
@@ -69,7 +78,10 @@ class AuthController extends Controller
         $invite = $inviteToken ? $invites->find($inviteToken) : null;
 
         if (! $invite && ! PlatformSettings::bool('signup_enabled')) {
-            return back()->withInput()->withErrors(['email' => 'Pendaftaran akun baru sedang ditutup sementara. Hubungi '.config('notifora.support_email').'.']);
+            $lockMessage = PlatformSettings::get('signup_lock_message')
+                ?: 'Pendaftaran akun baru sedang ditutup sementara. Hubungi '.config('notifora.support_email').'.';
+
+            return back()->withInput()->withErrors(['email' => $lockMessage]);
         }
 
         $data = $request->validate([
