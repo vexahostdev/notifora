@@ -14,6 +14,23 @@ document.addEventListener('DOMContentLoaded', () => {
   els.forEach((el) => io.observe(el));
 });
 
+// Hero: teks penuh baru terbuka setelah pengunjung menggulir pertama kali
+Alpine.data('heroGate', () => ({
+  unlocked: false,
+  init() {
+    if (window.scrollY > 24 || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      this.unlock();
+      return;
+    }
+    const onScroll = () => window.scrollY > 24 && this.unlock();
+    window.addEventListener('scroll', onScroll, { passive: true });
+    this.$watch('unlocked', (v) => v && window.removeEventListener('scroll', onScroll));
+  },
+  unlock() {
+    this.unlocked = true;
+  },
+}));
+
 // Easter egg: spray can (lazy, hanya aktif saat diminta)
 Alpine.data('sprayCanvas', () => ({
   on: false,

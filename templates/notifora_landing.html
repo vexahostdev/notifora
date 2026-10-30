@@ -271,7 +271,7 @@
     };
 
     /* ============================================================================
-       SECTION 1: HERO ("DROPPED QUEUES... / Go HARD")
+       SECTION 1: HERO ("RECEIVED...DELIVERED / Go HARD")
        ============================================================================ */
     const HeroSection = ({ mouseX, mouseY, onNavClick }) => {
       // Parallax transforms for multi-depth street art feel
@@ -281,12 +281,12 @@
       const graffitiY = useTransform(mouseY, [-0.5, 0.5], [14, -14]);
 
       const backgroundLines = [
-        'DROPPED QUEUES',
-        'RATE LIMITED',
-        'FAILED RETRIES',
-        'SLACK SPAM',
-        'SILENT FAILS',
-        'SPAGHETTI SDKS',
+        'RECEIVED',
+        'ROUTED',
+        'QUEUED',
+        'RETRIED',
+        'FALLBACK',
+        'DELIVERED',
       ];
 
       return (

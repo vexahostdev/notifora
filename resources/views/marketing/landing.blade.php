@@ -8,6 +8,11 @@
   @include('partials.theme-init')
   @vite(['resources/css/marketing.css', 'resources/js/marketing.js'])
   @include('partials.brand-head')
+  {{-- Tanpa JS, pintu hero tetap terbuka supaya teks tetap terbaca --}}
+  <noscript><style>
+    .js-gate { display: none !important; }
+    .hero-out { opacity: 1 !important; transform: none !important; }
+  </style></noscript>
 </head>
 <body x-data="{ menu: false }" @keydown.escape.window="if (menu) { menu = false; $refs.menuTrigger?.focus(); }">
 {{-- Filter SVG dekoratif (nonaktif otomatis lewat reduced-motion tidak berlaku; filter statis) --}}
@@ -79,28 +84,43 @@
   </header>
 
   {{-- HERO --}}
-  <section id="overview" class="concrete-hero relative min-h-screen overflow-hidden flex items-center border-b border-ink/10 pt-20">
+  <section id="overview" class="concrete-hero relative min-h-screen lg:h-dvh overflow-hidden flex items-center border-b border-ink/10 pt-20" x-data="heroGate()">
+    {{-- Pintu masuk: teks hero baru terbuka setelah pengunjung menggulir --}}
+    <div class="js-gate fixed inset-0 z-50 flex flex-col items-center justify-center gap-5 bg-concrete px-6 text-center"
+         x-show="!unlocked" x-transition.opacity.duration.700ms @wheel.passive="unlock()" @touchmove.passive="unlock()">
+      <p class="font-mono text-[10px] font-black tracking-[.22em] text-cobalt uppercase">GATEWAY NOTIFIKASI TERPADU</p>
+      <p class="display text-[13vw] sm:text-[9vw] lg:text-[104px]">{{ \App\Services\Brand::name() }}</p>
+      <p class="max-w-sm text-sm sm:text-base font-semibold leading-snug text-zinc-600">Enam keadaan dilalui setiap notifikasi. Satu API yang mengurus semuanya.</p>
+      <div class="mt-3 flex flex-col items-center gap-1.5 text-cobalt">
+        <span class="font-mono text-[10px] font-black tracking-[.22em] uppercase">Scroll</span>
+        <svg class="scroll-hint w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v14M6 13l6 6 6-6"/></svg>
+      </div>
+    </div>
+
     <svg class="absolute inset-0 w-full h-full pointer-events-none" viewBox="0 0 1440 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
       <g stroke="#1E2024" fill="none" stroke-linecap="round" stroke-linejoin="round">
         <path d="M-10,188 L18,210 L42,238 L49,255 L78,278 L72,306 L44,344 L36,368 L8,395 L-5,412" stroke-width="2.6" opacity=".7"/>
         <path d="M42,238 L66,232 L89,242 M78,278 L104,289 L124,285 M44,344 L62,362 L75,388" stroke-width="1.1" opacity=".45"/>
       </g>
     </svg>
-    <div class="relative w-full max-w-[1360px] mx-auto px-5 sm:px-9 md:px-12 py-12">
+    <div class="relative w-full max-w-[1360px] mx-auto px-5 sm:px-9 md:px-12 py-12 lg:py-0 lg:h-full lg:grid lg:grid-cols-12 lg:items-center lg:gap-8">
       <h1 class="sr-only">Notifora — satu API untuk semua notifikasi</h1>
-      <div class="relative z-10 flex flex-col" aria-hidden="true">
-        @foreach (['DROPPED QUEUES', 'RATE LIMITED', 'FAILED RETRIES', 'SLACK SPAM', 'SILENT FAILS', 'SPAGHETTI SDKS'] as $i => $line)
+      {{-- Lifecycle pesan: mengalir seperti semula di mobile, jadi kolom kiri di desktop --}}
+      <div class="flex flex-col lg:col-span-8" aria-hidden="true">
+        @foreach (['RECEIVED', 'ROUTED', 'QUEUED', 'RETRIED', 'FALLBACK', 'DELIVERED'] as $i => $line)
           <div class="overflow-hidden">
-            <div class="display hero-ghost text-[10.8vw] sm:text-[9.6vw] lg:text-[124px] xl:text-[138px] rise" style="animation-delay: {{ $i * 80 }}ms">{{ $line }}</div>
+            <div class="display hero-ghost ghost-line whitespace-nowrap" :class="unlocked ? 'rise' : 'opacity-0'" style="animation-delay: {{ $i * 80 }}ms">{{ $line }}</div>
           </div>
         @endforeach
       </div>
-      <div class="relative z-20 mt-12 max-w-xl reveal">
-        <p class="font-mono text-[10px] font-black tracking-[.18em] text-cobalt uppercase mb-2">SATU API · SEMUA NOTIFIKASI</p>
-        <p class="text-lg sm:text-xl font-semibold leading-snug">Kirim ke WhatsApp, Email, Telegram, dan In-App Inbox dari satu endpoint, dengan retry otomatis dan fallback antar-channel.</p>
-        <div class="mt-6 flex flex-wrap gap-3">
-          <a href="{{ route('register') }}" class="b-btn">Get API key <span aria-hidden="true">↗</span></a>
-          <a href="{{ url('/docs') }}" class="b-btn-alt">Baca dokumentasi</a>
+      <div class="relative z-20 mt-12 lg:mt-0 lg:col-span-4 lg:justify-self-end" :class="unlocked ? 'hero-in' : 'hero-out'">
+        <div class="max-w-xl lg:max-w-[380px]">
+          <p class="font-mono text-[10px] font-black tracking-[.18em] text-cobalt uppercase mb-2">SATU API · SEMUA NOTIFIKASI</p>
+          <p class="text-lg sm:text-xl font-semibold leading-snug">Kirim ke WhatsApp, Email, Telegram, dan In-App Inbox dari satu endpoint, dengan retry otomatis dan fallback antar-channel.</p>
+          <div class="mt-6 flex flex-wrap gap-3">
+            <a href="{{ route('register') }}" class="b-btn">Get API key <span aria-hidden="true">↗</span></a>
+            <a href="{{ url('/docs') }}" class="b-btn-alt">Baca dokumentasi</a>
+          </div>
         </div>
       </div>
     </div>
