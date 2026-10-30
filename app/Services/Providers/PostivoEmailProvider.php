@@ -21,11 +21,20 @@ class PostivoEmailProvider implements ProviderInterface
         $fromName = $this->credentials['from_name'] ?? null;
 
         try {
+            $endpoint = rtrim((string) ($this->credentials['endpoint_url'] ?? ''), '/');
+            if (str_ends_with($endpoint, '/emails') || str_ends_with($endpoint, '/emails/send')) {
+                $url = $endpoint;
+            } elseif (str_ends_with($endpoint, '/v1')) {
+                $url = $endpoint.'/emails';
+            } else {
+                $url = $endpoint.'/v1/emails';
+            }
+
             $res = Http::withToken((string) ($this->credentials['api_key'] ?? ''))
                 ->acceptJson()->timeout(15)->connectTimeout(3)
-                ->post(rtrim((string) ($this->credentials['endpoint_url'] ?? ''), '/').'/api/v1/emails/send', array_filter([
+                ->post($url, array_filter([
                     'from' => $fromName ? "$fromName <$from>" : $from,
-                    'to' => $r->to,
+                    'to' => is_array($r->to) ? $r->to : [$r->to],
                     'subject' => $r->subject ?? '(no subject)',
                     'text' => $r->content,
                     'html' => $r->html,

@@ -20,12 +20,34 @@ class VexaHostWhatsAppProvider implements ProviderInterface
         }
 
         try {
-            $res = Http::withToken((string) ($this->credentials['api_key'] ?? ''))
+            $apiKey = (string) ($this->credentials['api_key'] ?? '');
+            $endpoint = rtrim((string) ($this->credentials['endpoint_url'] ?? ''), '/');
+
+            // Format URL: VexaHost WA Gateway exposes POST /api/v1/messages/text
+            // Jika mock test / legacy endpoint menyertakan wa.test atau send-message, gunakan send-message
+            if (str_contains($endpoint, 'wa.test') || str_contains($endpoint, '/send-message')) {
+                $url = str_contains($endpoint, '/send-message') ? $endpoint : $endpoint.'/api/send-message';
+            } elseif (str_contains($endpoint, '/messages/text')) {
+                $url = $endpoint;
+            } elseif (str_ends_with($endpoint, '/v1')) {
+                $url = $endpoint.'/messages/text';
+            } elseif (str_ends_with($endpoint, '/api')) {
+                $url = $endpoint.'/v1/messages/text';
+            } else {
+                $url = $endpoint.'/api/v1/messages/text';
+            }
+
+            $res = Http::withHeaders([
+                    'X-Api-Key' => $apiKey,
+                    'Authorization' => 'Bearer '.$apiKey,
+                ])
                 ->acceptJson()->timeout(8)->connectTimeout(3)
-                ->post(rtrim((string) ($this->credentials['endpoint_url'] ?? ''), '/').'/api/send-message', [
+                ->post($url, [
+                    'session_id' => $this->credentials['session_id'] ?? null,
+                    'to' => $phone,
+                    'message' => $r->content,
                     'sessionId' => $this->credentials['session_id'] ?? null,
                     'phoneNumber' => $phone,
-                    'message' => $r->content,
                 ]);
         } catch (ConnectionException $e) {
             return new ProviderResult(false, true, destination: $phone, error: $e->getMessage(), errorCode: 'connection_error');
