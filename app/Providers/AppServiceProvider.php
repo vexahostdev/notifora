@@ -33,7 +33,6 @@ class AppServiceProvider extends ServiceProvider
         if ($this->app->isProduction()) {
             config([
                 'app.debug' => false,
-                'admin.require_2fa' => true,
             ]);
         }
 

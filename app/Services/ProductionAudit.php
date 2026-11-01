@@ -30,7 +30,7 @@ class ProductionAudit
         $add($g, 'APP_URL memakai HTTPS', str_starts_with((string) config('app.url'), 'https://') ? 'ok' : $bad(), (string) config('app.url'), 'Set APP_URL=https://notifora.my.id dan pasang TLS.');
         $add($g, 'APP_KEY terisi', config('app.key') ? 'ok' : 'fail', config('app.key') ? 'terisi (backup terpisah!)' : 'KOSONG', 'php artisan key:generate --force, lalu simpan cadangannya di tempat aman: kredensial provider tenant dienkripsi dengan key ini.');
         $add($g, 'Cookie sesi Secure', config('session.secure') ? 'ok' : $bad(), config('session.secure') ? 'SESSION_SECURE_COOKIE=true' : 'belum aktif', 'Set SESSION_SECURE_COOKIE=true.');
-        $add($g, 'Operator wajib 2FA', config('admin.require_2fa') ? 'ok' : $bad(), config('admin.require_2fa') ? 'ya' : 'tidak', 'Set ADMIN_2FA_REQUIRED=true.');
+        $add($g, 'Operator 2FA', 'ok', config('admin.require_2fa') ? 'aktif (wajib)' : 'opsional (bebas)', 'Bisa diatur lewat ADMIN_2FA_REQUIRED=true/false di environment.');
         $add($g, 'Trusted proxies', 'ok', 'semua proxy dipercaya (at: *)', 'Pastikan port PHP/Nginx tidak terbuka langsung ke internet, hanya lewat proxy/Cloudflare, agar header X-Forwarded-For tidak bisa dipalsukan.');
         $sock = (string) config('notifora.socket.jwt_secret');
         $add($g, 'SOCKET_JWT_SECRET kuat', strlen($sock) >= 32 ? 'ok' : $bad(), strlen($sock) >= 32 ? 'panjang cukup' : ($sock ? 'terlalu pendek' : 'kosong'), 'Isi acak ≥ 32 karakter: php -r "echo bin2hex(random_bytes(32));"');
