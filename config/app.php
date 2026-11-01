@@ -39,9 +39,7 @@ return [
     |
     */
 
-    'debug' => env('APP_ENV') === 'production'
-        ? (filter_var(env('FORCE_DEBUG', false), FILTER_VALIDATE_BOOLEAN) ? true : false)
-        : (bool) env('APP_DEBUG', false),
+    'debug' => (bool) env('APP_DEBUG', false),
 
     /*
     |--------------------------------------------------------------------------

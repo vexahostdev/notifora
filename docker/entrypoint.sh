@@ -16,7 +16,6 @@ case "${ROLE:-web}" in
     php artisan route:cache
     php artisan view:cache
     if [ "${RUN_MIGRATIONS:-false}" = "true" ]; then php artisan migrate --force; fi
-    php artisan schedule:run 2>/dev/null || true
     exec supervisord -n -c /etc/supervisord.conf -j /tmp/supervisord.pid --configuration /etc/supervisor.d/web.conf 2>/dev/null \
       || exec supervisord -n -c /etc/supervisor.d/web.conf
     ;;

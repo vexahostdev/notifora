@@ -13,9 +13,7 @@ return [
     |
     */
 
-    'default' => env('APP_ENV') === 'production' && env('QUEUE_CONNECTION') === 'sync'
-        ? (env('REDIS_HOST') ? 'redis' : 'database')
-        : env('QUEUE_CONNECTION', 'database'),
+    'default' => env('QUEUE_CONNECTION', 'database'),
 
     /*
     |--------------------------------------------------------------------------

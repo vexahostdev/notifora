@@ -2,9 +2,7 @@
 
 return [
     // Operator platform wajib memakai 2FA (TOTP). Hanya boleh dimatikan di development lokal.
-    'require_2fa' => env('APP_ENV') === 'production'
-        ? filter_var(env('ADMIN_2FA_REQUIRED', true), FILTER_VALIDATE_BOOLEAN)
-        : (bool) env('ADMIN_2FA_REQUIRED', false),
+    'require_2fa' => (bool) env('ADMIN_2FA_REQUIRED', true),
 
     // URL health socket-engine (opsional), mis. http://notifora-socket:8042/health
     'socket_health_url' => env('SOCKET_HEALTH_URL'),
