@@ -30,6 +30,13 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if ($this->app->isProduction()) {
+            config([
+                'app.debug' => false,
+                'admin.require_2fa' => true,
+            ]);
+        }
+
         PlanCatalog::apply(); // gabungkan plan dari DB (Admin → Plans) ke config
         Brand::apply();       // nama, email dukungan, nama pengirim (Admin → Branding)
         MailSettings::apply(); // SMTP dari Admin → Email → SMTP bila diaktifkan
