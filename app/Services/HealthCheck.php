@@ -82,9 +82,36 @@ class HealthCheck
             if (! $url) {
                 return ['warn', 'SOCKET_HEALTH_URL belum diatur'];
             }
-            $r = Http::timeout(3)->get($url);
+            try {
+                $r = Http::timeout(3)->get($url);
+                if ($r->successful()) {
+                    return ['ok', "$url → HTTP ".$r->status()];
+                }
+            } catch (Throwable $e) {
+                // Di dalam Docker Compose, fallback otomatis ke nama service notifora-socket bila 127.0.0.1 gagal
+                if (str_contains($url, '127.0.0.1') || str_contains($url, 'localhost')) {
+                    $dockerUrl = preg_replace('/(127\.0\.0\.1|localhost)/', 'notifora-socket', $url);
+                    try {
+                        $r2 = Http::timeout(3)->get($dockerUrl);
+                        if ($r2->successful()) {
+                            return ['ok', "$dockerUrl → HTTP ".$r2->status()];
+                        }
+                    } catch (Throwable) {
+                        // Coba nama alias socket
+                        $dockerUrl2 = preg_replace('/(127\.0\.0\.1|localhost)/', 'socket', $url);
+                        try {
+                            $r3 = Http::timeout(3)->get($dockerUrl2);
+                            if ($r3->successful()) {
+                                return ['ok', "$dockerUrl2 → HTTP ".$r3->status()];
+                            }
+                        } catch (Throwable) {}
+                    }
+                }
 
-            return [$r->successful() ? 'ok' : 'fail', "$url → HTTP ".$r->status()];
+                return ['fail', mb_substr($e->getMessage(), 0, 160)];
+            }
+
+            return ['fail', "$url → HTTP ".$r->status()];
         });
         $add('Job gagal', function () {
             $n = DB::table('failed_jobs')->count();
