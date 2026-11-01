@@ -15,7 +15,9 @@ return [
     |
     */
 
-    'default' => env('CACHE_STORE', 'database'),
+    'default' => env('APP_ENV') === 'production' && env('CACHE_STORE') === 'file'
+        ? (env('REDIS_HOST') ? 'redis' : 'database')
+        : env('CACHE_STORE', 'database'),
 
     /*
     |--------------------------------------------------------------------------
